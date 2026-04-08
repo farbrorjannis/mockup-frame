@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instant Social Mockup Generator for Artists</title>
+<meta name="description" content="Free art mockup generator for artists. Upload your artwork and instantly create professional gallery-framed mockups for Instagram, Pinterest, and social media presentation.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #fcf9f3;
+    --earth: #5d4a3e;
+    --earth-light: #8a6f61;
+    --cream: #f1ede4;
+    --cream-dark: #e8e0d3;
+    --white: #ffffff;
+    --text: #3a2e28;
+    --text-muted: #9b887e;
+    --radius-lg: 24px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    --shadow-soft: 0 4px 24px rgba(93,74,62,0.10);
+    --shadow-card: 0 2px 12px rgba(93,74,62,0.08);
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', -apple-system, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .app-wrap {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 2.5rem 1.25rem 4rem;
+  }
+
+  .app-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+  }
+
+  .app-header h1 {
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(2rem, 5vw, 2.8rem);
+    font-weight: 300;
+    color: var(--earth);
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+    margin-bottom: 0.5rem;
+  }
+
+  .app-header p {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    font-weight: 300;
+    letter-spacing: 0.04em;
+  }
+
+  .divider {
+    width: 48px;
+    height: 1px;
+    background: var(--cream-dark);
+    margin: 1rem auto;
+  }
+
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+
+  @media (min-width: 680px) {
+    .main-grid {
+      grid-template-columns: 1fr 280px;
+      align-items: start;
+    }
+  }
+
+  .canvas-card {
+    background: var(--cream);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-soft);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    min-height: 320px;
+    position: relative;
+  }
+
+  .canvas-wrap {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #previewCanvas {
+    border-radius: var(--radius-md);
+    max-width: 100%;
+    height: auto;
+    display: block;
+    transition: opacity 0.3s ease;
+  }
+
+  .upload-zone {
+    width: 100%;
+    min-height: 260px;
+    border: 1.5px dashed var(--cream-dark);
+    border-radius: var(--radius-md);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    padding: 2rem;
+    background: rgba(255,255,255,0.5);
+  }
+
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--earth-light);
+    background: rgba(255,255,255,0.8);
+  }
+
+  .upload-icon {
+    width: 48px;
+    height: 48px;
+    background: var(--cream-dark);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .upload-icon svg { width: 22px; height: 22px; stroke: var(--earth); }
+
+  .upload-zone p { font-size: 14px; color: var(--text-muted); text-align: center; line-height: 1.5; }
+  .upload-zone strong { color: var(--earth); font-weight: 500; }
+  #fileInput { display: none; }
+
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .control-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem 1.25rem 1.25rem;
+    box-shadow: var(--shadow-card);
+  }
+
+  .control-label {
+    font-size: 10.5px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text-muted);
+    margin-bottom: 0.75rem;
+    display: block;
+  }
+
+  .frame-btns {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+  }
+
+  .frame-btn {
+    border: 1.5px solid var(--cream-dark);
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    padding: 0.55rem 0.25rem 0.45rem;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--text-muted);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    transition: all 0.18s ease;
+  }
+
+  .frame-btn:hover { border-color: var(--earth-light); color: var(--earth); }
+
+  .frame-btn.active {
+    border-color: var(--earth);
+    background: var(--cream);
+    color: var(--earth);
+    font-weight: 500;
+  }
+
+  .frame-swatch {
+    width: 28px;
+    height: 14px;
+    border-radius: 4px;
+    border: 1px solid rgba(0,0,0,0.08);
+  }
+
+  .mat-options {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .mat-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .mat-row label {
+    font-size: 13px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    min-width: 42px;
+  }
+
+  input[type="range"] {
+    flex: 1;
+    -webkit-appearance: none;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--cream-dark);
+    outline: none;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--earth);
+    cursor: pointer;
+    border: 2px solid var(--white);
+    box-shadow: 0 1px 4px rgba(93,74,62,0.25);
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--earth);
+    cursor: pointer;
+    border: 2px solid var(--white);
+    box-shadow: 0 1px 4px rgba(93,74,62,0.25);
+  }
+
+  .range-val {
+    font-size: 12px;
+    color: var(--earth);
+    font-weight: 500;
+    min-width: 28px;
+    text-align: right;
+  }
+
+  .mat-color-row {
+    display: flex;
+    gap: 7px;
+    margin-top: 4px;
+  }
+
+  .color-dot {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.15s, border-color 0.15s;
+    flex-shrink: 0;
+  }
+
+  .color-dot:hover { transform: scale(1.1); }
+  .color-dot.active { border-color: var(--earth); transform: scale(1.08); }
+
+  .bg-options {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+  }
+
+  .bg-chip {
+    flex: 1;
+    min-width: 48px;
+    border: 1.5px solid var(--cream-dark);
+    border-radius: 6px;
+    height: 30px;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.15s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bg-chip:hover { border-color: var(--earth-light); }
+  .bg-chip.active { border-color: var(--earth); border-width: 2px; }
+
+  .action-card {
+    background: var(--earth);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+  }
+
+  .btn-upload-new {
+    width: 100%;
+    padding: 0.65rem 1rem;
+    border-radius: var(--radius-sm);
+    border: 1.5px solid rgba(255,255,255,0.25);
+    background: transparent;
+    color: rgba(255,255,255,0.8);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 400;
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s;
+    margin-bottom: 0.6rem;
+    letter-spacing: 0.03em;
+  }
+
+  .btn-upload-new:hover { background: rgba(255,255,255,0.1); color: white; }
+
+  .btn-download {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--bg);
+    color: var(--earth);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    transition: background 0.18s, transform 0.12s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .btn-download:hover { background: var(--cream); transform: translateY(-1px); }
+  .btn-download:active { transform: translateY(0); }
+  .btn-download svg { width: 15px; height: 15px; stroke: var(--earth); flex-shrink: 0; }
+
+  .btn-download:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .status-msg {
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-muted);
+    padding-top: 0.25rem;
+    min-height: 18px;
+  }
+
+  .tip-text {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.5;
+    padding-top: 0.25rem;
+  }
+
+  .hidden { display: none !important; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+  .fade-in { animation: fadeIn 0.35s ease forwards; }
+</style>
+</head>
+<body>
+<div class="app-wrap">
+
+  <header class="app-header">
+    <h1>Art Mockup Studio</h1>
+    <div class="divider"></div>
+    <p>Frame your artwork &mdash; instantly &mdash; for gallery-ready social sharing</p>
+  </header>
+
+  <div class="main-grid">
+
+    <div class="canvas-card">
+      <div class="canvas-wrap" id="canvasWrap">
+        <div class="upload-zone" id="uploadZone">
+          <div class="upload-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <p><strong>Drop your artwork here</strong><br>or click to browse</p>
+          <p style="font-size:12px">JPG · PNG · WEBP · GIF</p>
+        </div>
+        <canvas id="previewCanvas" class="hidden"></canvas>
+      </div>
+      <p class="tip-text" id="tipText">Upload an image to generate your framed mockup</p>
+      <input type="file" id="fileInput" accept="image/*">
+    </div>
+
+    <div class="sidebar">
+
+      <div class="control-card">
+        <span class="control-label">Frame Material</span>
+        <div class="frame-btns">
+          <button class="frame-btn active" data-frame="oak">
+            <span class="frame-swatch" style="background: linear-gradient(135deg,#c8a97a,#9d7a52,#c8a97a)"></span>
+            Oak
+          </button>
+          <button class="frame-btn" data-frame="black">
+            <span class="frame-swatch" style="background: linear-gradient(135deg,#3a3a3a,#1a1a1a,#3a3a3a)"></span>
+            Ebony
+          </button>
+          <button class="frame-btn" data-frame="white">
+            <span class="frame-swatch" style="background: linear-gradient(135deg,#f5f5f2,#e8e8e3,#f5f5f2); border:1px solid #ddd"></span>
+            White
+          </button>
+        </div>
+      </div>
+
+      <div class="control-card">
+        <span class="control-label">Mat (Passepartout)</span>
+        <div class="mat-options">
+          <div class="mat-row">
+            <label>Width</label>
+            <input type="range" id="matWidth" min="0" max="100" value="40">
+            <span class="range-val" id="matWidthVal">40</span>
+          </div>
+        </div>
+        <div style="margin-top: 10px;">
+          <span class="control-label" style="margin-bottom: 6px;">Mat Color</span>
+          <div class="mat-color-row">
+            <div class="color-dot active" data-mat="#f9f6f0" style="background:#f9f6f0; border-color: var(--earth);"></div>
+            <div class="color-dot" data-mat="#ffffff" style="background:#ffffff;"></div>
+            <div class="color-dot" data-mat="#1a1a1a" style="background:#1a1a1a;"></div>
+            <div class="color-dot" data-mat="#c8b9a5" style="background:#c8b9a5;"></div>
+            <div class="color-dot" data-mat="#d6d0c8" style="background:#d6d0c8;"></div>
+            <div class="color-dot" data-mat="#3d5a4c" style="background:#3d5a4c;"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="control-card">
+        <span class="control-label">Background</span>
+        <div class="bg-options">
+          <div class="bg-chip active" data-bg="wall-warm" style="background: linear-gradient(135deg, #f5efe6, #ede4d9);" title="Warm Wall"></div>
+          <div class="bg-chip" data-bg="wall-white" style="background: #f7f7f7;" title="Studio White"></div>
+          <div class="bg-chip" data-bg="wall-dark" style="background: linear-gradient(135deg, #2a2520, #1a1612);" title="Dark Gallery"></div>
+          <div class="bg-chip" data-bg="wall-sage" style="background: linear-gradient(135deg, #d8dfd5, #c8d1c4);" title="Sage Green"></div>
+          <div class="bg-chip" data-bg="wall-slate" style="background: linear-gradient(135deg, #cdd3da, #bbc2cc);" title="Slate Blue"></div>
+        </div>
+      </div>
+
+      <div class="action-card">
+        <button class="btn-upload-new" id="uploadNewBtn">&#43; Upload New Artwork</button>
+        <button class="btn-download" id="downloadBtn" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Download PNG
+        </button>
+        <p class="status-msg" id="statusMsg">1600 &times; 1200 px &mdash; high resolution</p>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function() {
+  const fileInput = document.getElementById('fileInput');
+  const uploadZone = document.getElementById('uploadZone');
+  const canvas = document.getElementById('previewCanvas');
+  const ctx = canvas.getContext('2d');
+  const downloadBtn = document.getElementById('downloadBtn');
+  const uploadNewBtn = document.getElementById('uploadNewBtn');
+  const statusMsg = document.getElementById('statusMsg');
+  const tipText = document.getElementById('tipText');
+
+  let userImage = null;
+  let currentFrame = 'oak';
+  let currentBg = 'wall-warm';
+  let matColor = '#f9f6f0';
+  let matWidth = 40;
+
+  const EXPORT_W = 1600;
+  const EXPORT_H = 1200;
+
+  const bgColors = {
+    'wall-warm':  ['#f0e8dc', '#e6dcd0'],
+    'wall-white': ['#f4f4f4', '#ececec'],
+    'wall-dark':  ['#2a2520', '#1a1612'],
+    'wall-sage':  ['#d4dbd0', '#c4cdc0'],
+    'wall-slate': ['#c8ced6', '#b8c0cc'],
+  };
+
+  const frameThemes = {
+    oak: {
+      wood: [
+        { stop: 0,   color: '#d4a96a' },
+        { stop: 0.15, color: '#b8874a' },
+        { stop: 0.35, color: '#c99a5e' },
+        { stop: 0.6,  color: '#a87640' },
+        { stop: 0.8,  color: '#c0915a' },
+        { stop: 1,   color: '#d4a96a' },
+      ],
+      highlight: 'rgba(255,230,180,0.18)',
+      shadow:    'rgba(60,30,10,0.55)',
+    },
+    black: {
+      wood: [
+        { stop: 0,   color: '#383530' },
+        { stop: 0.2,  color: '#252220' },
+        { stop: 0.4,  color: '#302d28' },
+        { stop: 0.7,  color: '#1a1815' },
+        { stop: 0.85, color: '#2a2724' },
+        { stop: 1,   color: '#383530' },
+      ],
+      highlight: 'rgba(255,255,255,0.07)',
+      shadow:    'rgba(0,0,0,0.75)',
+    },
+    white: {
+      wood: [
+        { stop: 0,   color: '#f0ece7' },
+        { stop: 0.2,  color: '#e0dbd5' },
+        { stop: 0.4,  color: '#ebe7e2' },
+        { stop: 0.65, color: '#d8d4cf' },
+        { stop: 0.85, color: '#e5e1dc' },
+        { stop: 1,   color: '#f0ece7' },
+      ],
+      highlight: 'rgba(255,255,255,0.45)',
+      shadow:    'rgba(100,90,80,0.35)',
+    },
+  };
+
+  function makeWoodGradient(c, x0, y0, x1, y1, theme) {
+    const g = c.createLinearGradient(x0, y0, x1, y1);
+    for (const s of frameThemes[theme].wood) g.addColorStop(s.stop, s.color);
+    return g;
+  }
+
+  function drawMockup(c, W, H, img) {
+    c.clearRect(0, 0, W, H);
+
+    const [bg1, bg2] = bgColors[currentBg];
+
+    const bgGrad = c.createLinearGradient(0, 0, W, H);
+    bgGrad.addColorStop(0, bg1);
+    bgGrad.addColorStop(1, bg2);
+    c.fillStyle = bgGrad;
+    c.fillRect(0, 0, W, H);
+
+    addWallTexture(c, W, H);
+
+    const imgRatio = img.width / img.height;
+
+    const MAX_ART_W = W * 0.62;
+    const MAX_ART_H = H * 0.70;
+
+    let artW, artH;
+    if (imgRatio > MAX_ART_W / MAX_ART_H) {
+      artW = MAX_ART_W;
+      artH = artW / imgRatio;
+    } else {
+      artH = MAX_ART_H;
+      artW = artH * imgRatio;
+    }
+
+    const fw = Math.round(W * 0.018);
+    const mat = matWidth;
+
+    const totalW = artW + mat * 2 + fw * 2;
+    const totalH = artH + mat * 2 + fw * 2;
+
+    const fx = (W - totalW) / 2;
+    const fy = (H - totalH) / 2;
+
+    drawFrameShadow(c, fx, fy, totalW, totalH);
+    drawFrameBody(c, fx, fy, totalW, totalH, fw);
+    drawMat(c, fx + fw, fy + fw, artW + mat * 2, artH + mat * 2, mat);
+    drawArtwork(c, img, fx + fw + mat, fy + fw + mat, artW, artH);
+  }
+
+  function addWallTexture(c, W, H) {
+    c.save();
+    c.globalAlpha = 0.03;
+    for (let y = 0; y < H; y += 4) {
+      c.fillStyle = (Math.random() > 0.5) ? '#fff' : '#000';
+      c.fillRect(0, y, W, 1);
+    }
+    c.restore();
+  }
+
+  function drawFrameShadow(c, fx, fy, fw, fh) {
+    c.save();
+    const blur = Math.round(fw * 0.12);
+    for (let i = blur; i >= 0; i--) {
+      const alpha = (1 - i / blur) * 0.032;
+      c.shadowColor = 'transparent';
+      c.fillStyle = `rgba(20,15,10,${alpha})`;
+      c.beginPath();
+      c.roundRect(fx + i * 0.6, fy + i * 0.9, fw, fh, 3);
+      c.fill();
+    }
+    c.restore();
+
+    c.save();
+    c.shadowColor = 'rgba(10,6,3,0.18)';
+    c.shadowBlur = Math.round(fw * 0.11);
+    c.shadowOffsetX = Math.round(fw * 0.012);
+    c.shadowOffsetY = Math.round(fw * 0.025);
+    c.fillStyle = 'rgba(0,0,0,0.001)';
+    c.beginPath();
+    c.roundRect(fx, fy, fw, fh, 2);
+    c.fill();
+    c.restore();
+  }
+
+  function drawFrameBody(c, fx, fy, fw, fh, thickness) {
+    const theme = currentFrame;
+    const t = thickness;
+
+    const segments = [
+      { pts: [[fx,fy],[fx+fw,fy],[fx+fw-t,fy+t],[fx+t,fy+t]], dir: 'h' },
+      { pts: [[fx+fw,fy],[fx+fw,fy+fh],[fx+fw-t,fy+fh-t],[fx+fw-t,fy+t]], dir: 'v' },
+      { pts: [[fx,fy+fh],[fx+fw,fy+fh],[fx+fw-t,fy+fh-t],[fx+t,fy+fh-t]], dir: 'h' },
+      { pts: [[fx,fy],[fx+t,fy+t],[fx+t,fy+fh-t],[fx,fy+fh]], dir: 'v' },
+    ];
+
+    for (const seg of segments) {
+      const [[x0,y0],[x1,y1]] = [seg.pts[0], seg.pts[1]];
+      const grad = (seg.dir === 'h')
+        ? makeWoodGradient(c, x0, y0, x0, y0 + t * 2, theme)
+        : makeWoodGradient(c, x0, y0, x0 + t * 2, y0, theme);
+
+      c.fillStyle = grad;
+      c.beginPath();
+      c.moveTo(...seg.pts[0]);
+      c.lineTo(...seg.pts[1]);
+      c.lineTo(...seg.pts[2]);
+      c.lineTo(...seg.pts[3]);
+      c.closePath();
+      c.fill();
+
+      const hlGrad = (seg.dir === 'h')
+        ? c.createLinearGradient(x0, y0, x0, y0 + t)
+        : c.createLinearGradient(x0, y0, x0 + t, y0);
+      hlGrad.addColorStop(0, frameThemes[theme].highlight);
+      hlGrad.addColorStop(0.5, 'rgba(255,255,255,0)');
+      hlGrad.addColorStop(1, frameThemes[theme].shadow);
+
+      c.fillStyle = hlGrad;
+      c.beginPath();
+      c.moveTo(...seg.pts[0]);
+      c.lineTo(...seg.pts[1]);
+      c.lineTo(...seg.pts[2]);
+      c.lineTo(...seg.pts[3]);
+      c.closePath();
+      c.fill();
+    }
+
+    c.strokeStyle = 'rgba(0,0,0,0.18)';
+    c.lineWidth = 0.5;
+    c.strokeRect(fx + 0.25, fy + 0.25, fw - 0.5, fh - 0.5);
+
+    c.strokeStyle = 'rgba(0,0,0,0.22)';
+    c.lineWidth = 0.5;
+    c.strokeRect(fx + t - 0.5, fy + t - 0.5, fw - t*2 + 1, fh - t*2 + 1);
+  }
+
+  function drawMat(c, mx, my, mw, mh, matThickness) {
+    if (matThickness <= 0) return;
+
+    const artX = mx + matThickness;
+    const artY = my + matThickness;
+    const artW = mw - matThickness * 2;
+    const artH = mh - matThickness * 2;
+
+    c.fillStyle = matColor;
+    c.fillRect(mx, my, mw, mh);
+
+    c.save();
+    c.shadowColor = 'rgba(0,0,0,0.28)';
+    c.shadowBlur = Math.max(4, matThickness * 0.2);
+    c.shadowOffsetX = 0;
+    c.shadowOffsetY = matThickness * 0.05;
+    c.fillStyle = 'rgba(0,0,0,0.001)';
+    c.strokeStyle = 'transparent';
+    c.beginPath();
+    c.rect(artX, artY, artW, artH);
+    c.fill();
+    c.restore();
+
+    const insetGrad = c.createLinearGradient(artX, artY, artX, artY + Math.min(12, matThickness * 0.15));
+    insetGrad.addColorStop(0, 'rgba(0,0,0,0.10)');
+    insetGrad.addColorStop(1, 'rgba(0,0,0,0)');
+    c.fillStyle = insetGrad;
+    c.fillRect(artX, artY, artW, Math.min(12, matThickness * 0.15));
+
+    const bevelLight = 'rgba(255,255,255,0.55)';
+    const bevelDark = 'rgba(0,0,0,0.15)';
+
+    c.strokeStyle = bevelDark;
+    c.lineWidth = 0.75;
+    c.strokeRect(artX, artY, artW, artH);
+
+    c.strokeStyle = bevelLight;
+    c.lineWidth = 0.5;
+    c.beginPath();
+    c.moveTo(artX - 0.5, artY - 0.5);
+    c.lineTo(artX + artW, artY - 0.5);
+    c.moveTo(artX - 0.5, artY - 0.5);
+    c.lineTo(artX - 0.5, artY + artH);
+    c.stroke();
+  }
+
+  function drawArtwork(c, img, ax, ay, aw, ah) {
+    c.save();
+    c.shadowColor = 'rgba(0,0,0,0.22)';
+    c.shadowBlur = 8;
+    c.shadowOffsetX = 0;
+    c.shadowOffsetY = 2;
+    c.drawImage(img, ax, ay, aw, ah);
+    c.restore();
+
+    const vignette = c.createRadialGradient(
+      ax + aw/2, ay + ah/2, Math.min(aw,ah)*0.3,
+      ax + aw/2, ay + ah/2, Math.max(aw,ah)*0.75
+    );
+    vignette.addColorStop(0, 'rgba(0,0,0,0)');
+    vignette.addColorStop(1, 'rgba(0,0,0,0.08)');
+    c.fillStyle = vignette;
+    c.fillRect(ax, ay, aw, ah);
+  }
+
+  function renderPreview() {
+    if (!userImage) return;
+
+    const wrap = document.getElementById('canvasWrap');
+    const maxW = wrap.clientWidth || 480;
+    const scale = maxW / EXPORT_W;
+    const W = Math.round(EXPORT_W * scale);
+    const H = Math.round(EXPORT_H * scale);
+
+    canvas.width = W;
+    canvas.height = H;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+
+    drawMockup(ctx, W, H, userImage);
+  }
+
+  function renderExport(callback) {
+    const offCanvas = document.createElement('canvas');
+    offCanvas.width = EXPORT_W;
+    offCanvas.height = EXPORT_H;
+    const offCtx = offCanvas.getContext('2d');
+    drawMockup(offCtx, EXPORT_W, EXPORT_H, userImage);
+    callback(offCanvas);
+  }
+
+  function loadImage(file) {
+    if (!file || !file.type.startsWith('image/')) {
+      statusMsg.textContent = 'Please upload a valid image file.';
+      return;
+    }
+
+    const reader = new FileReader();
+    if (!reader) {
+      statusMsg.textContent = 'File reading not supported in this browser.';
+      return;
+    }
+
+    reader.onload = function(e) {
+      if (!e || !e.target || !e.target.result) return;
+      const img = new Image();
+      img.onload = function() {
+        userImage = img;
+        uploadZone.classList.add('hidden');
+        canvas.classList.remove('hidden');
+        canvas.classList.add('fade-in');
+        downloadBtn.disabled = false;
+        tipText.textContent = 'Looking great — adjust the controls and download';
+        statusMsg.textContent = '1600 \u00D7 1200 px \u2014 high resolution';
+        renderPreview();
+      };
+      img.onerror = function() {
+        statusMsg.textContent = 'Could not load image. Please try another file.';
+      };
+      img.src = e.target.result;
+    };
+
+    reader.onerror = function() {
+      statusMsg.textContent = 'Error reading file. Please try again.';
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  uploadZone.addEventListener('click', () => fileInput.click());
+  uploadNewBtn.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', function() {
+    if (this.files && this.files[0]) {
+      loadImage(this.files[0]);
+      this.value = '';
+    }
+  });
+
+  uploadZone.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    this.classList.add('drag-over');
+  });
+  uploadZone.addEventListener('dragleave', function() {
+    this.classList.remove('drag-over');
+  });
+  uploadZone.addEventListener('drop', function(e) {
+    e.preventDefault();
+    this.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) loadImage(file);
+  });
+
+  document.querySelectorAll('.frame-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.frame-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      currentFrame = this.dataset.frame;
+      if (userImage) renderPreview();
+    });
+  });
+
+  const matWidthSlider = document.getElementById('matWidth');
+  const matWidthVal = document.getElementById('matWidthVal');
+  matWidthSlider.addEventListener('input', function() {
+    matWidth = parseInt(this.value);
+    matWidthVal.textContent = this.value;
+    if (userImage) renderPreview();
+  });
+
+  document.querySelectorAll('.color-dot').forEach(dot => {
+    dot.addEventListener('click', function() {
+      document.querySelectorAll('.color-dot').forEach(d => {
+        d.classList.remove('active');
+        d.style.borderColor = 'transparent';
+      });
+      this.classList.add('active');
+      this.style.borderColor = 'var(--earth)';
+      matColor = this.dataset.mat;
+      if (userImage) renderPreview();
+    });
+  });
+
+  document.querySelectorAll('.bg-chip').forEach(chip => {
+    chip.addEventListener('click', function() {
+      document.querySelectorAll('.bg-chip').forEach(c => c.classList.remove('active'));
+      this.classList.add('active');
+      currentBg = this.dataset.bg;
+      if (userImage) renderPreview();
+    });
+  });
+
+  downloadBtn.addEventListener('click', function() {
+    if (!userImage) return;
+    this.disabled = true;
+    statusMsg.textContent = 'Rendering high-res export\u2026';
+
+    setTimeout(() => {
+      renderExport(function(offCanvas) {
+        const link = document.createElement('a');
+        link.download = 'art-mockup-' + Date.now() + '.png';
+        link.href = offCanvas.toDataURL('image/png');
+        link.click();
+        downloadBtn.disabled = false;
+        statusMsg.textContent = 'Downloaded \u2014 1600 \u00D7 1200 px';
+        setTimeout(() => {
+          statusMsg.textContent = '1600 \u00D7 1200 px \u2014 high resolution';
+        }, 3000);
+      });
+    }, 80);
+  });
+
+  window.addEventListener('resize', function() {
+    if (userImage) {
+      clearTimeout(window._resizeTimer);
+      window._resizeTimer = setTimeout(renderPreview, 150);
+    }
+  });
+
+  if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+      r = Math.min(r, w/2, h/2);
+      this.beginPath();
+      this.moveTo(x + r, y);
+      this.arcTo(x + w, y, x + w, y + h, r);
+      this.arcTo(x + w, y + h, x, y + h, r);
+      this.arcTo(x, y + h, x, y, r);
+      this.arcTo(x, y, x + w, y, r);
+      this.closePath();
+    };
+  }
+
+})();
+</script>
+</body>
+</html>
