@@ -125,17 +125,27 @@
     let currentFrameColor = '#8d6e63'; // Initial Oak
 
     fileInput.onchange = (e) => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            userImg.onload = () => {
-                placeholder.style.display = 'none';
-                downloadBtn.style.display = 'block';
-                drawMockup();
-            };
-            userImg.src = event.target.result;
+    // FIX: Kontrollera att det faktiskt finns en vald fil innan vi fortsätter
+    if (!e.target.files || e.target.files.length === 0) {
+        return; 
+    }
+
+    const file = e.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+        userImg.onload = () => {
+            placeholder.style.display = 'none';
+            downloadBtn.style.display = 'block';
+            drawMockup();
         };
-        reader.readAsDataURL(e.target.files);
+        userImg.src = event.target.result;
     };
+    
+    // Här skickar vi nu in den specifika filen 'file'
+    reader.readAsDataURL(file);
+};
+
 
     function changeFrame(type) {
         if (type === 'oak') currentFrameColor = '#8d6e63';
