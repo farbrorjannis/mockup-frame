@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Art Mockup Studio — Watercolor Edition</title>
+<meta name="description" content="Frame your artwork instantly for gallery-ready social sharing.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #fcf9f3;
+  --earth: #5d4a3e;
+  --earth-light: #8a6f61;
+  --cream: #f1ede4;
+  --cream-dark: #e0d8cc;
+  --white: #ffffff;
+  --text: #3a2e28;
+  --text-muted: #9b887e;
+  --radius-lg: 20px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --shadow-soft: 0 4px 28px rgba(93,74,62,0.10);
+  --shadow-card: 0 2px 14px rgba(93,74,62,0.07);
+}
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+.app-wrap {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 4rem;
+}
+.app-header { text-align: center; margin-bottom: 2.5rem; }
+.app-header h1 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(1.9rem, 4vw, 2.8rem);
+  font-weight: 300;
+  color: var(--earth);
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+.app-header p {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  margin-top: 0.4rem;
+}
+.divider { width: 48px; height: 1px; background: var(--cream-dark); margin: 0.9rem auto; }
+
+/* ── Layout ── */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 296px;
+  gap: 1.5rem;
+  align-items: start;
+}
+@media (max-width: 700px) { .main-grid { grid-template-columns: 1fr; } }
+
+/* ── Canvas card ── */
+.canvas-card {
+  background: var(--cream);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 360px;
+}
+.canvas-wrap {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 280px;
+}
+#previewCanvas {
+  border-radius: var(--radius-md);
+  max-width: 100%;
+  height: auto;
+  display: block;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.10);
+}
+#previewCanvas.hidden { display: none; }
+
+/* ── Upload zone ── */
+.upload-zone {
+  width: 100%;
+  min-height: 240px;
+  border: 1.5px dashed var(--cream-dark);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  padding: 2rem;
+  background: rgba(255,255,255,0.5);
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--earth-light);
+  background: rgba(255,255,255,0.82);
+}
+.upload-zone.hidden { display: none; }
+.upload-icon {
+  width: 44px; height: 44px;
+  background: var(--cream-dark);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.upload-icon svg { width: 20px; height: 20px; stroke: var(--earth); }
+.upload-zone p { font-size: 13.5px; color: var(--text-muted); text-align: center; line-height: 1.5; }
+.upload-zone strong { color: var(--earth); font-weight: 500; }
+#fileInput { display: none; }
+
+/* ── HEIC warning ── */
+.heic-warning {
+  display: none;
+  background: #fff8e6;
+  border: 1px solid #e8c97a;
+  border-radius: var(--radius-sm);
+  padding: 0.7rem 1rem;
+  font-size: 12.5px;
+  line-height: 1.6;
+  width: 100%;
+  color: var(--text);
+}
+.heic-warning.visible { display: block; }
+
+/* ── Tip ── */
+.tip-text {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  text-align: center;
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+
+/* ── Sidebar ── */
+.sidebar { display: flex; flex-direction: column; gap: 0.9rem; }
+.control-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 1.15rem 1.25rem;
+  box-shadow: var(--shadow-card);
+}
+.control-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--earth);
+  margin-bottom: 0.65rem;
+  display: block;
+}
+
+/* ── Ratio buttons ── */
+.ratio-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.ratio-btn {
+  border: 1.5px solid var(--cream-dark);
+  background: var(--bg);
+  color: var(--text-muted);
+  padding: 0.42rem 0.4rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11.5px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all 0.18s;
+  text-align: center;
+  line-height: 1.3;
+}
+.ratio-btn span { display: block; font-size: 10px; opacity: 0.65; }
+.ratio-btn:hover { border-color: var(--earth-light); color: var(--earth); }
+.ratio-btn.active {
+  border-color: var(--earth);
+  background: var(--cream);
+  color: var(--earth);
+  font-weight: 500;
+}
+
+/* ── Frame buttons ── */
+.frame-btns { display: grid; grid-template-columns: repeat(3,1fr); gap: 6px; }
+.frame-btn {
+  border: 1.5px solid var(--cream-dark);
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 0.48rem 0.2rem 0.4rem;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  transition: all 0.18s;
+}
+.frame-btn:hover { border-color: var(--earth-light); color: var(--earth); }
+.frame-btn.active { border-color: var(--earth); background: var(--cream); color: var(--earth); font-weight: 500; }
+.frame-swatch { width: 26px; height: 9px; border-radius: 3px; display: block; }
+
+/* ── Mat controls ── */
+.mat-row {
+  display: flex; align-items: center; gap: 0.6rem;
+  font-size: 12px; color: var(--text-muted);
+}
+.mat-row input[type=range] { flex: 1; accent-color: var(--earth); height: 3px; }
+.range-val { font-size: 11px; color: var(--earth); min-width: 22px; text-align: right; }
+
+/* ── Color dots ── */
+.dot-row { display: flex; gap: 7px; flex-wrap: wrap; margin-top: 0.55rem; }
+.color-dot {
+  width: 21px; height: 21px; border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.15s, transform 0.15s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.13);
+}
+.color-dot:hover { transform: scale(1.15); }
+.color-dot.active { border-color: var(--earth) !important; }
+
+/* ── BG chips ── */
+.bg-grid { display: flex; gap: 7px; flex-wrap: wrap; }
+.bg-chip {
+  width: 26px; height: 26px; border-radius: 6px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.15s, transform 0.15s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+}
+.bg-chip:hover { transform: scale(1.12); }
+.bg-chip.active { border-color: var(--earth) !important; }
+
+/* ── Text inputs ── */
+.input-row { margin-bottom: 0.65rem; }
+.input-row:last-child { margin-bottom: 0; }
+.input-row label { font-size: 11px; color: var(--text-muted); display: block; margin-bottom: 3px; }
+.label-input {
+  width: 100%;
+  padding: 0.48rem 0.65rem;
+  border: 1px solid var(--cream-dark);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.18s;
+}
+.label-input:focus { border-color: var(--earth-light); }
+.label-input::placeholder { color: var(--text-muted); font-style: italic; }
+
+/* ── Action card ── */
+.action-card {
+  background: var(--earth);
+  border-radius: var(--radius-lg);
+  padding: 1.15rem 1.25rem;
+  display: flex; flex-direction: column; gap: 0.65rem;
+}
+.btn-upload-new {
+  width: 100%; padding: 0.58rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid rgba(255,255,255,0.2);
+  background: transparent;
+  color: rgba(255,255,255,0.72);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+.btn-upload-new:hover { background: rgba(255,255,255,0.10); color: #fff; }
+
+/* Download buttons row */
+.dl-row { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.btn-download {
+  padding: 0.58rem 0.5rem;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: rgba(255,255,255,0.13);
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 500;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: background 0.18s;
+  letter-spacing: 0.02em;
+}
+.btn-download:hover:not(:disabled) { background: rgba(255,255,255,0.22); }
+.btn-download:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-download svg { width: 13px; height: 13px; stroke: currentColor; flex-shrink: 0; }
+.status-msg { font-size: 11px; color: rgba(255,255,255,0.48); text-align: center; letter-spacing: 0.03em; }
+</style>
+</head>
+<body>
+<div class="app-wrap">
+  <header class="app-header">
+    <h1>Art Mockup Studio</h1>
+    <div class="divider"></div>
+    <p>Frame your artwork &mdash; instantly &mdash; for gallery-ready social sharing</p>
+  </header>
+
+  <div class="main-grid">
+    <!-- Canvas -->
+    <div class="canvas-card">
+      <div class="canvas-wrap" id="canvasWrap">
+        <div class="upload-zone" id="uploadZone">
+          <div class="upload-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <p><strong>Drop your artwork here</strong><br>or click to browse</p>
+          <p style="font-size:12px">JPG &middot; PNG &middot; WEBP &middot; GIF</p>
+        </div>
+        <canvas id="previewCanvas" class="hidden"></canvas>
+      </div>
+      <div class="heic-warning" id="heicWarning">
+        <strong>⚠ HEIC/HEIF not supported</strong> — switch camera to JPEG:<br>
+        <b>iPhone:</b> Settings → Camera → Formats → <em>Most Compatible</em><br>
+        <b>Samsung:</b> Camera → Settings → Picture format → <em>JPG</em>
+      </div>
+      <p class="tip-text" id="tipText">Upload an image to generate your framed mockup</p>
+      <input type="file" id="fileInput" accept="image/*">
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+      <!-- Output format -->
+      <div class="control-card">
+        <span class="control-label">Output Format</span>
+        <div class="ratio-btns">
+          <button class="ratio-btn active" data-id="square">Instagram<span>1 : 1 &nbsp;·&nbsp; 1080×1080</span></button>
+          <button class="ratio-btn" data-id="portrait">Instagram<span>4 : 5 &nbsp;·&nbsp; 1080×1350</span></button>
+          <button class="ratio-btn" data-id="pinterest">Pinterest<span>2 : 3 &nbsp;·&nbsp; 1000×1500</span></button>
+          <button class="ratio-btn" data-id="landscape">Landscape<span>4 : 3 &nbsp;·&nbsp; 1600×1200</span></button>
+        </div>
+      </div>
+
+      <!-- Frame material -->
+      <div class="control-card">
+        <span class="control-label">Frame Material</span>
+        <div class="frame-btns" id="frameControls">
+          <button class="frame-btn active" data-frame="oak">
+            <span class="frame-swatch" style="background:linear-gradient(135deg,#c8a97a,#9d7a52,#c8a97a)"></span>Oak
+          </button>
+          <button class="frame-btn" data-frame="black">
+            <span class="frame-swatch" style="background:linear-gradient(135deg,#3a3a3a,#1a1a1a,#3a3a3a)"></span>Ebony
+          </button>
+          <button class="frame-btn" data-frame="white">
+            <span class="frame-swatch" style="background:linear-gradient(135deg,#f5f5f2,#e8e8e3,#f5f5f2);border:1px solid #ddd"></span>White
+          </button>
+        </div>
+      </div>
+
+      <!-- Mat -->
+      <div class="control-card">
+        <span class="control-label">Mat (Passepartout)</span>
+        <div class="mat-row">
+          <span>Width</span>
+          <input type="range" id="matWidth" min="0" max="100" value="40">
+          <span class="range-val" id="matWidthVal">40</span>
+        </div>
+        <span class="control-label" style="margin-top:0.85rem">Mat Color</span>
+        <div class="dot-row" id="matColorRow">
+          <!-- 10 mat colors -->
+          <div class="color-dot active" data-mat="#f9f6f0" style="background:#f9f6f0" title="Warm White"></div>
+          <div class="color-dot" data-mat="#ffffff" style="background:#ffffff" title="Pure White"></div>
+          <div class="color-dot" data-mat="#f0ebe1" style="background:#f0ebe1" title="Linen"></div>
+          <div class="color-dot" data-mat="#e8e0d0" style="background:#e8e0d0" title="Parchment"></div>
+          <div class="color-dot" data-mat="#d6cfc4" style="background:#d6cfc4" title="Stone"></div>
+          <div class="color-dot" data-mat="#c8b9a5" style="background:#c8b9a5" title="Sand"></div>
+          <div class="color-dot" data-mat="#b5c4b8" style="background:#b5c4b8" title="Sage Mist"></div>
+          <div class="color-dot" data-mat="#3d5a4c" style="background:#3d5a4c" title="Forest"></div>
+          <div class="color-dot" data-mat="#2d3540" style="background:#2d3540" title="Ink Blue"></div>
+          <div class="color-dot" data-mat="#1a1a1a" style="background:#1a1a1a" title="Ebony"></div>
+        </div>
+      </div>
+
+      <!-- Gallery card label -->
+      <div class="control-card">
+        <span class="control-label">Gallery Card</span>
+        <div class="input-row">
+          <label for="artworkTitle">Artwork title</label>
+          <input class="label-input" type="text" id="artworkTitle" placeholder="e.g. Whispers of Dawn" maxlength="50">
+        </div>
+        <div class="input-row">
+          <label for="artistName">Artist name</label>
+          <input class="label-input" type="text" id="artistName" placeholder="e.g. Anna Svensson" maxlength="40">
+        </div>
+      </div>
+
+      <!-- Background wall -->
+      <div class="control-card">
+        <span class="control-label">Background Wall</span>
+        <div class="bg-grid" id="bgGrid">
+          <!-- 10 wall colors -->
+          <div class="bg-chip active" data-bg="wall-warm"    style="background:linear-gradient(135deg,#f5efe6,#ede4d9)" title="Warm Plaster"></div>
+          <div class="bg-chip" data-bg="wall-ivory"          style="background:linear-gradient(135deg,#f8f5ee,#f0ece3)" title="Ivory"></div>
+          <div class="bg-chip" data-bg="wall-white"          style="background:#f3f3f3" title="Studio White"></div>
+          <div class="bg-chip" data-bg="wall-linen"          style="background:linear-gradient(135deg,#e8e0d4,#ddd4c6)" title="Raw Linen"></div>
+          <div class="bg-chip" data-bg="wall-clay"           style="background:linear-gradient(135deg,#d9cfc4,#ccc0b3)" title="Clay"></div>
+          <div class="bg-chip" data-bg="wall-sage"           style="background:linear-gradient(135deg,#d4dbd0,#c2cbbf)" title="Sage Green"></div>
+          <div class="bg-chip" data-bg="wall-slate"          style="background:linear-gradient(135deg,#c8ced6,#b6bdc8)" title="Slate Blue"></div>
+          <div class="bg-chip" data-bg="wall-dusty-rose"     style="background:linear-gradient(135deg,#ddd0cc,#cfc0bc)" title="Dusty Rose"></div>
+          <div class="bg-chip" data-bg="wall-charcoal"       style="background:linear-gradient(135deg,#48403a,#302a26)" title="Charcoal"></div>
+          <div class="bg-chip" data-bg="wall-dark"           style="background:linear-gradient(135deg,#1e1c19,#131210)" title="Dark Gallery"></div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="action-card">
+        <button class="btn-upload-new" id="uploadNewBtn">+ Upload New Artwork</button>
+        <div class="dl-row">
+          <button class="btn-download" id="downloadPng" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            PNG
+          </button>
+          <button class="btn-download" id="downloadJpg" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            JPG
+          </button>
+        </div>
+        <p class="status-msg" id="statusMsg">Upload an image to begin</p>
+      </div>
+
+    </div><!-- /sidebar -->
+  </div><!-- /main-grid -->
+</div><!-- /app-wrap -->
+
+<script>
+(function () {
+  'use strict';
+
+  // ── DOM ──────────────────────────────────────────
+  const fileInput   = document.getElementById('fileInput');
+  const uploadZone  = document.getElementById('uploadZone');
+  const canvas      = document.getElementById('previewCanvas');
+  const ctx         = canvas.getContext('2d');
+  const dlPng       = document.getElementById('downloadPng');
+  const dlJpg       = document.getElementById('downloadJpg');
+  const uploadNewBtn= document.getElementById('uploadNewBtn');
+  const statusMsg   = document.getElementById('statusMsg');
+  const tipText     = document.getElementById('tipText');
+  const heicWarning = document.getElementById('heicWarning');
+  const canvasWrap  = document.getElementById('canvasWrap');
+
+  // ── State ────────────────────────────────────────
+  let userImage   = null;
+  let frameStyle  = 'oak';
+  let bgStyle     = 'wall-warm';
+  let matColor    = '#f9f6f0';
+  let matWidthPct = 40;
+  let artTitle    = '';
+  let artistName  = '';
+  let ratioKey    = 'square';
+
+  const RATIOS = {
+    square:    { w:1, h:1,  px:[1080,1080] },
+    portrait:  { w:4, h:5,  px:[1080,1350] },
+    pinterest: { w:2, h:3,  px:[1000,1500] },
+    landscape: { w:4, h:3,  px:[1600,1200] },
+  };
+
+  const BG_COLORS = {
+    'wall-warm':       ['#f0e8dc','#e6dcd0'],
+    'wall-ivory':      ['#f5f1e8','#ede8dd'],
+    'wall-white':      ['#f5f5f3','#eeeeec'],
+    'wall-linen':      ['#e5ddd1','#d9d0c2'],
+    'wall-clay':       ['#d6cbc0','#c9bcaf'],
+    'wall-sage':       ['#d4dbd0','#c2cbbf'],
+    'wall-slate':      ['#c8ced6','#b6bdc8'],
+    'wall-dusty-rose': ['#d9ceca','#ccbfba'],
+    'wall-charcoal':   ['#4a423c','#332e29'],
+    'wall-dark':       ['#201e1b','#141210'],
+  };
+
+  const FRAME_THEMES = {
+    oak: {
+      segs: ['#d4a96a','#b8874a','#c99a5e','#a87640','#c0915a','#d4a96a'],
+      hl: 'rgba(255,228,175,0.18)',
+    },
+    black: {
+      segs: ['#383530','#252220','#302d28','#1a1815','#2a2724','#383530'],
+      hl: 'rgba(255,255,255,0.07)',
+    },
+    white: {
+      segs: ['#f0ece7','#e0dbd5','#ebe7e2','#d8d4cf','#e5e1dc','#f0ece7'],
+      hl: 'rgba(255,255,255,0.42)',
+    },
+  };
+
+  // ── Image loading ────────────────────────────────
+  function isHEIC(file) {
+    const ext = (file.name||'').split('.').pop().toLowerCase();
+    return ext==='heic'||ext==='heif'||file.type==='image/heic'||file.type==='image/heif';
+  }
+
+  async function resizeToMax(bitmap, maxPx) {
+    if (Math.max(bitmap.width, bitmap.height) <= maxPx) return bitmap;
+    const s = maxPx / Math.max(bitmap.width, bitmap.height);
+    const tmp = document.createElement('canvas');
+    tmp.width = Math.round(bitmap.width*s);
+    tmp.height= Math.round(bitmap.height*s);
+    tmp.getContext('2d').drawImage(bitmap,0,0,tmp.width,tmp.height);
+    return createImageBitmap(tmp);
+  }
+
+  function bitmapToImg(bitmap) {
+    return new Promise((res,rej)=>{
+      const tmp = document.createElement('canvas');
+      tmp.width=bitmap.width; tmp.height=bitmap.height;
+      tmp.getContext('2d').drawImage(bitmap,0,0);
+      const img = new Image();
+      img.onload = ()=>res(img);
+      img.onerror= ()=>rej(new Error('bitmapToImg failed'));
+      img.src = tmp.toDataURL('image/jpeg',0.93);
+    });
+  }
+
+  function loadViaReader(file) {
+    return new Promise((res,rej)=>{
+      const reader = new FileReader();
+      reader.onload = e=>{
+        const img = new Image();
+        img.onload = ()=>res(img);
+        img.onerror= ()=>rej(new Error('decode failed'));
+        img.src = e.target.result;
+      };
+      reader.onerror = ()=>rej(new Error('reader failed'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function loadImage(file) {
+    if (!file) return;
+    heicWarning.classList.remove('visible');
+    if (isHEIC(file)) { heicWarning.classList.add('visible'); statusMsg.textContent='⚠ HEIC not supported'; return; }
+    statusMsg.textContent = 'Loading…';
+    try {
+      let img;
+      if (typeof createImageBitmap === 'function') {
+        try {
+          let bmp = await createImageBitmap(file,{imageOrientation:'from-image'});
+          bmp = await resizeToMax(bmp,2000);
+          img = await bitmapToImg(bmp);
+        } catch(_) { img = await loadViaReader(file); }
+      } else { img = await loadViaReader(file); }
+      onImageReady(img);
+    } catch(err) { statusMsg.textContent = 'Could not load image — try another file.'; }
+  }
+
+  function onImageReady(img) {
+    userImage = img;
+    heicWarning.classList.remove('visible');
+    uploadZone.classList.add('hidden');
+    canvas.classList.remove('hidden');
+    dlPng.disabled = false;
+    dlJpg.disabled = false;
+    tipText.textContent = 'Adjust controls, then download your mockup';
+    updateStatus();
+    renderPreview();
+  }
+
+  function updateStatus() {
+    const r = RATIOS[ratioKey];
+    statusMsg.textContent = r.px[0] + ' × ' + r.px[1] + ' px';
+  }
+
+  // ── Drawing helpers ───────────────────────────────
+
+  function drawBackground(c, W, H) {
+    const [c1,c2] = BG_COLORS[bgStyle];
+    const g = c.createLinearGradient(0,0,W,H);
+    g.addColorStop(0,c1); g.addColorStop(1,c2);
+    c.fillStyle=g; c.fillRect(0,0,W,H);
+    // very subtle grain
+    c.save(); c.globalAlpha=0.018;
+    for(let y=0;y<H;y+=2){ c.fillStyle=Math.random()>.5?'#fff':'#000'; c.fillRect(0,y,W,1); }
+    c.restore();
+  }
+
+  function makeWoodGrad(c, x0,y0,x1,y1, theme) {
+    const g = c.createLinearGradient(x0,y0,x1,y1);
+    const cols = FRAME_THEMES[theme].segs;
+    [0,.15,.35,.6,.8,1].forEach((s,i)=>g.addColorStop(s,cols[i]));
+    return g;
+  }
+
+  function drawFrameShadow(c, fx,fy,fw,fh) {
+    // Soft, subtle multi-layer shadow — intentionally light
+    c.save();
+    // Layer 1: wide, very faint
+    c.shadowColor   = 'rgba(15,10,5,0.10)';
+    c.shadowBlur    = fw * 0.10;
+    c.shadowOffsetX = fw * 0.006;
+    c.shadowOffsetY = fw * 0.016;
+    c.fillStyle = 'rgba(0,0,0,0.001)';
+    c.beginPath(); c.rect(fx,fy,fw,fh); c.fill();
+    c.restore();
+
+    c.save();
+    // Layer 2: tight contact shadow, slightly darker
+    c.shadowColor   = 'rgba(10,6,2,0.13)';
+    c.shadowBlur    = fw * 0.04;
+    c.shadowOffsetX = fw * 0.003;
+    c.shadowOffsetY = fw * 0.009;
+    c.fillStyle = 'rgba(0,0,0,0.001)';
+    c.beginPath(); c.rect(fx,fy,fw,fh); c.fill();
+    c.restore();
+  }
+
+  function drawFrameBody(c, fx,fy,fw,fh, t) {
+    const theme = frameStyle;
+    const segs = [
+      // top
+      { pts:[[fx,fy],[fx+fw,fy],[fx+fw-t,fy+t],[fx+t,fy+t]], gx0:fx,gy0:fy,gx1:fx,gy1:fy+t },
+      // bottom
+      { pts:[[fx,fy+fh],[fx+fw,fy+fh],[fx+fw-t,fy+fh-t],[fx+t,fy+fh-t]], gx0:fx,gy0:fy+fh-t,gx1:fx,gy1:fy+fh },
+      // left
+      { pts:[[fx,fy],[fx+t,fy+t],[fx+t,fy+fh-t],[fx,fy+fh]], gx0:fx,gy0:fy,gx1:fx+t,gy1:fy },
+      // right
+      { pts:[[fx+fw,fy],[fx+fw-t,fy+t],[fx+fw-t,fy+fh-t],[fx+fw,fy+fh]], gx0:fx+fw-t,gy0:fy,gx1:fx+fw,gy1:fy },
+    ];
+
+    for (const s of segs) {
+      const grad = makeWoodGrad(c, s.gx0,s.gy0,s.gx1,s.gy1, theme);
+      c.fillStyle = grad;
+      c.beginPath();
+      c.moveTo(...s.pts[0]); c.lineTo(...s.pts[1]);
+      c.lineTo(...s.pts[2]); c.lineTo(...s.pts[3]);
+      c.closePath(); c.fill();
+
+      // highlight sheen
+      const hl = c.createLinearGradient(s.gx0,s.gy0,s.gx1,s.gy1);
+      hl.addColorStop(0, FRAME_THEMES[theme].hl);
+      hl.addColorStop(1,'rgba(255,255,255,0)');
+      c.fillStyle=hl;
+      c.beginPath();
+      c.moveTo(...s.pts[0]); c.lineTo(...s.pts[1]);
+      c.lineTo(...s.pts[2]); c.lineTo(...s.pts[3]);
+      c.closePath(); c.fill();
+    }
+
+    // outer edge stroke
+    c.strokeStyle='rgba(0,0,0,0.20)'; c.lineWidth=0.75;
+    c.strokeRect(fx+.4,fy+.4,fw-.8,fh-.8);
+    // inner rabbet
+    c.strokeStyle='rgba(0,0,0,0.16)'; c.lineWidth=0.5;
+    c.strokeRect(fx+t,fy+t,fw-t*2,fh-t*2);
+  }
+
+  function drawMat(c, mx,my,mw,mh, mt) {
+    if(mt<=0) return;
+    const ax=mx+mt, ay=my+mt, aw=mw-mt*2, ah=mh-mt*2;
+    c.fillStyle=matColor; c.fillRect(mx,my,mw,mh);
+    // opening shadow
+    c.save();
+    c.shadowColor='rgba(0,0,0,0.26)';
+    c.shadowBlur=Math.max(5,mt*0.16);
+    c.shadowOffsetY=mt*0.05;
+    c.fillStyle='rgba(0,0,0,0.001)';
+    c.beginPath(); c.rect(ax,ay,aw,ah); c.fill();
+    c.restore();
+    // top inset gradient
+    const ig=c.createLinearGradient(ax,ay,ax,ay+Math.min(mt*0.2,12));
+    ig.addColorStop(0,'rgba(0,0,0,0.09)'); ig.addColorStop(1,'rgba(0,0,0,0)');
+    c.fillStyle=ig; c.fillRect(ax,ay,aw,Math.min(mt*0.2,12));
+    // border
+    c.strokeStyle='rgba(0,0,0,0.10)'; c.lineWidth=0.75;
+    c.strokeRect(ax,ay,aw,ah);
+  }
+
+  function drawArtwork(c, img, ax,ay,aw,ah) {
+    c.save();
+    c.shadowColor='rgba(0,0,0,0.18)'; c.shadowBlur=8; c.shadowOffsetY=2;
+    c.drawImage(img,ax,ay,aw,ah);
+    c.restore();
+    // very subtle vignette
+    const v=c.createRadialGradient(ax+aw/2,ay+ah/2,Math.min(aw,ah)*0.3,ax+aw/2,ay+ah/2,Math.max(aw,ah)*0.75);
+    v.addColorStop(0,'rgba(0,0,0,0)'); v.addColorStop(1,'rgba(0,0,0,0.06)');
+    c.fillStyle=v; c.fillRect(ax,ay,aw,ah);
+  }
+
+  // ── Label sizing helper ────────────────────────────
+  function getLabelHeight(W, H) {
+    if (!artTitle && !artistName) return 0;
+    const titleSize  = Math.round(H * 0.030);
+    const authorSize = Math.round(H * 0.020);
+    let h = 10; // 10px top padding
+    if (artTitle)   h += titleSize + 6;
+    if (artistName) h += authorSize + 4;
+    h += 10; // 10px bottom padding
+    return h;
+  }
+
+  function drawGalleryLabel(c, W, H, labelAreaY, labelAreaH) {
+    if (!artTitle && !artistName) return;
+    const titleSize  = Math.round(H * 0.030);
+    const authorSize = Math.round(H * 0.020);
+
+    // Determine text color based on wall darkness
+    const darkWalls = ['wall-charcoal','wall-dark'];
+    const onDark = darkWalls.includes(bgStyle);
+    const titleCol  = onDark ? 'rgba(240,235,225,0.90)' : '#5d4a3e';
+    const authorCol = onDark ? 'rgba(210,200,185,0.70)' : '#9b887e';
+
+    let y = labelAreaY + 10;
+    c.textAlign = 'center';
+
+    if (artTitle) {
+      c.font = `300 italic ${titleSize}px 'Cormorant Garamond', Georgia, serif`;
+      c.fillStyle = titleCol;
+      c.globalAlpha = 0.92;
+      c.fillText(artTitle, W/2, y + titleSize);
+      y += titleSize + 6;
+      c.globalAlpha = 1;
+    }
+    if (artistName) {
+      c.font = `300 ${authorSize}px 'DM Sans', sans-serif`;
+      c.fillStyle = authorCol;
+      c.globalAlpha = 0.78;
+      c.fillText(artistName, W/2, y + authorSize);
+      c.globalAlpha = 1;
+    }
+    c.textAlign = 'left';
+  }
+
+  // ── Main scene renderer ───────────────────────────
+  function drawScene(c, W, H, img) {
+    c.clearRect(0,0,W,H);
+    drawBackground(c, W, H);
+
+    // How much vertical space the label needs
+    const labelH = getLabelHeight(W, H);
+
+    // Frame fills available space minus label area and a small wall margin
+    const WALL_PAD = Math.round(Math.min(W,H) * 0.03); // ~3% breathing room around frame
+    const availW = W - WALL_PAD * 2;
+    const availH = H - WALL_PAD * 2 - labelH;
+
+    // artwork natural ratio
+    const imgRatio = img.width / img.height;
+
+    // frame thickness & mat
+    // We'll compute these proportionally after we know frame size
+    // First: determine maximum artwork area inside frame+mat
+    // frameT = ~4% of total frame width (will refine below iteratively)
+    // matT   = matWidthPct mapped 0-100 → 0 to ~8% of frame width
+
+    // Solve: totalW = artW + 2*matT + 2*frameT
+    //        totalH = artH + 2*matT + 2*frameT
+    //        totalW / totalH = availW / availH  ← constrained to available box
+    //        artW / artH = imgRatio
+
+    // Start by fitting art to available box
+    let artW, artH;
+    if (imgRatio > availW / availH) {
+      artW = availW; artH = artW / imgRatio;
+    } else {
+      artH = availH; artW = artH * imgRatio;
+    }
+
+    // Frame thickness relative to smaller dimension of art
+    const frameT = Math.max(10, Math.round(Math.min(artW,artH) * 0.038));
+    // Mat thickness from slider: 0→0px, 100→~12% of shorter side
+    const matT   = Math.round((matWidthPct / 100) * Math.min(artW,artH) * 0.12);
+
+    // Total frame outer dimensions
+    let totW = artW + (matT + frameT) * 2;
+    let totH = artH + (matT + frameT) * 2;
+
+    // Scale down if totals exceed available area
+    if (totW > availW || totH > availH) {
+      const scale = Math.min(availW/totW, availH/totH);
+      totW *= scale; totH *= scale;
+      artW *= scale; artH *= scale;
+      // frameT and matT scale too but we recompute them proportionally
+    }
+
+    // Recompute frameT / matT at final scale to keep proportions
+    const fT = Math.max(8, Math.round(Math.min(artW,artH) * 0.038));
+    const mT = Math.round((matWidthPct / 100) * Math.min(artW,artH) * 0.12);
+    const finalTotW = artW + (mT + fT) * 2;
+    const finalTotH = artH + (mT + fT) * 2;
+
+    // Position: horizontally centred, vertically centred in non-label area
+    const fx = Math.round((W - finalTotW) / 2);
+    const fy = Math.round(WALL_PAD + (availH - finalTotH) / 2);
+
+    drawFrameShadow(c, fx, fy, finalTotW, finalTotH);
+    drawFrameBody  (c, fx, fy, finalTotW, finalTotH, fT);
+    drawMat        (c, fx+fT, fy+fT, artW+(mT*2), artH+(mT*2), mT);
+    drawArtwork    (c, img, fx+fT+mT, fy+fT+mT, artW, artH);
+
+    // Gallery label in the reserved strip below frame
+    const labelY = fy + finalTotH;
+    drawGalleryLabel(c, W, H, labelY, H - labelY);
+  }
+
+  // ── Render engine ─────────────────────────────────
+  function renderPreview() {
+    if (!userImage) return;
+    const r = RATIOS[ratioKey];
+    const maxW = canvasWrap.clientWidth || 480;
+    const W = maxW;
+    const H = Math.round(maxW * r.h / r.w);
+    canvas.width=W; canvas.height=H;
+    canvas.style.width=W+'px'; canvas.style.height=H+'px';
+    drawScene(ctx, W, H, userImage);
+  }
+
+  function renderExport(format, cb) {
+    const r = RATIOS[ratioKey];
+    const W = r.px[0], H = r.px[1];
+    const off = document.createElement('canvas');
+    off.width=W; off.height=H;
+    drawScene(off.getContext('2d'), W, H, userImage);
+    cb(off, format);
+  }
+
+  // ── Event wiring ──────────────────────────────────
+
+  uploadZone.addEventListener('click', ()=>fileInput.click());
+  uploadNewBtn.addEventListener('click', ()=>fileInput.click());
+  fileInput.addEventListener('change', function(){
+    if(this.files&&this.files[0]){ loadImage(this.files[0]); this.value=''; }
+  });
+  uploadZone.addEventListener('dragover', e=>{ e.preventDefault(); uploadZone.classList.add('drag-over'); });
+  uploadZone.addEventListener('dragleave', ()=>uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop', e=>{
+    e.preventDefault(); uploadZone.classList.remove('drag-over');
+    if(e.dataTransfer.files[0]) loadImage(e.dataTransfer.files[0]);
+  });
+
+  // Ratio
+  document.querySelectorAll('.ratio-btn').forEach(btn=>{
+    btn.addEventListener('click', function(){
+      document.querySelectorAll('.ratio-btn').forEach(b=>b.classList.remove('active'));
+      this.classList.add('active');
+      ratioKey = this.dataset.id;
+      updateStatus();
+      if(userImage) renderPreview();
+    });
+  });
+
+  // Frame
+  document.getElementById('frameControls').addEventListener('click', e=>{
+    const btn = e.target.closest('.frame-btn');
+    if(!btn) return;
+    document.querySelectorAll('.frame-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    frameStyle = btn.dataset.frame;
+    if(userImage) renderPreview();
+  });
+
+  // Mat width
+  const matSlider = document.getElementById('matWidth');
+  const matVal    = document.getElementById('matWidthVal');
+  matSlider.addEventListener('input', function(){
+    matWidthPct = parseInt(this.value);
+    matVal.textContent = this.value;
+    if(userImage) renderPreview();
+  });
+
+  // Mat color
+  document.getElementById('matColorRow').addEventListener('click', e=>{
+    const dot = e.target.closest('.color-dot');
+    if(!dot) return;
+    document.querySelectorAll('#matColorRow .color-dot').forEach(d=>d.classList.remove('active'));
+    dot.classList.add('active');
+    matColor = dot.dataset.mat;
+    if(userImage) renderPreview();
+  });
+
+  // Background
+  document.getElementById('bgGrid').addEventListener('click', e=>{
+    const chip = e.target.closest('.bg-chip');
+    if(!chip) return;
+    document.querySelectorAll('.bg-chip').forEach(c=>c.classList.remove('active'));
+    chip.classList.add('active');
+    bgStyle = chip.dataset.bg;
+    if(userImage) renderPreview();
+  });
+
+  // Title / Artist
+  document.getElementById('artworkTitle').addEventListener('input', function(){
+    artTitle = this.value.trim();
+    if(userImage) renderPreview();
+  });
+  document.getElementById('artistName').addEventListener('input', function(){
+    artistName = this.value.trim();
+    if(userImage) renderPreview();
+  });
+
+  // Downloads
+  function doDownload(format) {
+    if(!userImage) return;
+    dlPng.disabled = true; dlJpg.disabled = true;
+    statusMsg.textContent = 'Rendering…';
+    setTimeout(()=>{
+      renderExport(format, (off)=>{
+        const a = document.createElement('a');
+        if(format==='png'){
+          a.download = 'mockup-'+ratioKey+'-'+Date.now()+'.png';
+          a.href = off.toDataURL('image/png');
+        } else {
+          a.download = 'mockup-'+ratioKey+'-'+Date.now()+'.jpg';
+          a.href = off.toDataURL('image/jpeg', 0.93);
+        }
+        a.click();
+        dlPng.disabled = false; dlJpg.disabled = false;
+        statusMsg.textContent = 'Downloaded ✓';
+        setTimeout(updateStatus, 2500);
+      });
+    }, 60);
+  }
+
+  dlPng.addEventListener('click', ()=>doDownload('png'));
+  dlJpg.addEventListener('click', ()=>doDownload('jpg'));
+
+  // Resize
+  window.addEventListener('resize', ()=>{
+    clearTimeout(window._rt);
+    window._rt = setTimeout(()=>{ if(userImage) renderPreview(); }, 160);
+  });
+
+})();
+</script>
+</body>
+</html>
