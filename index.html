@@ -596,29 +596,30 @@ html, body {
     return g;
   }
 
-  function drawFrameShadow(c, fx,fy,fw,fh) {
-    // Soft, subtle multi-layer shadow — intentionally light
+   function drawFrameShadow(c, fx, fy, fw, fh) {
     c.save();
-    // Layer 1: wide, very faint
-    c.shadowColor   = 'rgba(15,10,5,0.80)';
-    c.shadowBlur    = fw * 0.10;
-    c.shadowOffsetX = fw * 0.006;
-    c.shadowOffsetY = fw * 0.016;
-    c.fillStyle = 'rgba(0,0,0,0.001)';
-    c.beginPath(); c.rect(fx,fy,fw,fh); c.fill();
+    const blur = Math.round(fw * 0.12);
+    for (let i = blur; i >= 0; i--) {
+      const alpha = (1 - i / blur) * 0.032;
+      c.shadowColor = 'transparent';
+      c.fillStyle = `rgba(20,15,10,${alpha})`;
+      c.beginPath();
+      c.roundRect(fx + i * 0.6, fy + i * 0.9, fw, fh, 3);
+      c.fill();
+    }
     c.restore();
 
     c.save();
-    // Layer 2: tight contact shadow, slightly darker
-    c.shadowColor   = 'rgba(10,6,2,0.100)';
-    c.shadowBlur    = fw * 0.04;
-    c.shadowOffsetX = fw * 0.003;
-    c.shadowOffsetY = fw * 0.009;
+    c.shadowColor = 'rgba(10,6,3,0.18)';
+    c.shadowBlur = Math.round(fw * 0.11);
+    c.shadowOffsetX = Math.round(fw * 0.012);
+    c.shadowOffsetY = Math.round(fw * 0.025);
     c.fillStyle = 'rgba(0,0,0,0.001)';
-    c.beginPath(); c.rect(fx,fy,fw,fh); c.fill();
+    c.beginPath();
+    c.roundRect(fx, fy, fw, fh, 2);
+    c.fill();
     c.restore();
   }
-
   function drawFrameBody(c, fx,fy,fw,fh, t) {
     const theme = frameStyle;
     const segs = [
