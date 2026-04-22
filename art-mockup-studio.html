@@ -1,0 +1,1301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Art Mockup Studio — Watercolor Edition</title>
+<meta name="description" content="Frame your artwork instantly for gallery-ready social sharing.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #fcf9f3;
+  --earth: #5d4a3e;
+  --earth-light: #8a6f61;
+  --cream: #f1ede4;
+  --cream-dark: #e0d8cc;
+  --white: #ffffff;
+  --text: #3a2e28;
+  --text-muted: #9b887e;
+  --radius-lg: 20px;
+  --radius-md: 12px;
+  --radius-sm: 8px;
+  --shadow-soft: 0 4px 28px rgba(93,74,62,0.11);
+  --shadow-card: 0 2px 14px rgba(93,74,62,0.08);
+}
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+.app-wrap {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2.5rem 1.25rem 4rem;
+}
+.app-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+.app-header h1 {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-weight: 300;
+  color: var(--earth);
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+}
+.app-header p {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 300;
+  letter-spacing: 0.05em;
+  margin-top: 0.4rem;
+}
+.divider { width: 48px; height: 1px; background: var(--cream-dark); margin: 0.9rem auto; }
+
+/* ── Layout ── */
+.main-grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 1.5rem;
+  align-items: start;
+}
+@media (max-width: 700px) {
+  .main-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Canvas card ── */
+.canvas-card {
+  background: var(--cream);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-soft);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  min-height: 380px;
+}
+.canvas-wrap {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+}
+#previewCanvas {
+  border-radius: var(--radius-md);
+  max-width: 100%;
+  height: auto;
+  display: block;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.13);
+  transition: opacity 0.3s;
+}
+#previewCanvas.hidden { display: none; }
+
+/* ── Upload zone ── */
+.upload-zone {
+  width: 100%;
+  min-height: 260px;
+  border: 1.5px dashed var(--cream-dark);
+  border-radius: var(--radius-md);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  padding: 2rem;
+  background: rgba(255,255,255,0.5);
+}
+.upload-zone:hover, .upload-zone.drag-over {
+  border-color: var(--earth-light);
+  background: rgba(255,255,255,0.8);
+}
+.upload-zone.hidden { display: none; }
+.upload-icon {
+  width: 46px; height: 46px;
+  background: var(--cream-dark);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+}
+.upload-icon svg { width: 20px; height: 20px; stroke: var(--earth); }
+.upload-zone p { font-size: 13.5px; color: var(--text-muted); text-align: center; line-height: 1.5; }
+.upload-zone strong { color: var(--earth); font-weight: 500; }
+#fileInput { display: none; }
+
+/* ── HEIC warning ── */
+.heic-warning {
+  display: none;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  font-size: 13px;
+  line-height: 1.6;
+  width: 100%;
+}
+.heic-warning.visible { display: block; }
+
+/* ── Tip text ── */
+.tip-text {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-align: center;
+  font-style: italic;
+  letter-spacing: 0.02em;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.control-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem 1.35rem;
+  box-shadow: var(--shadow-card);
+}
+.control-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.13em;
+  color: var(--earth);
+  margin-bottom: 0.7rem;
+  display: block;
+}
+.control-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 0.6rem;
+  line-height: 1.5;
+}
+
+/* ── Ratio buttons ── */
+.ratio-btns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+.ratio-btn {
+  border: 1.5px solid var(--cream-dark);
+  background: var(--bg);
+  color: var(--text-muted);
+  padding: 0.45rem 0.5rem;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all 0.18s;
+  text-align: center;
+  line-height: 1.3;
+}
+.ratio-btn span { display: block; font-size: 10px; opacity: 0.7; }
+.ratio-btn:hover { border-color: var(--earth-light); color: var(--earth); }
+.ratio-btn.active {
+  border-color: var(--earth);
+  background: var(--cream);
+  color: var(--earth);
+  font-weight: 500;
+}
+
+/* ── Frame buttons ── */
+.frame-btns {
+  display: grid;
+  grid-template-columns: repeat(3,1fr);
+  gap: 7px;
+}
+.frame-btn {
+  border: 1.5px solid var(--cream-dark);
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.25rem 0.4rem;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: var(--text-muted);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.18s;
+}
+.frame-btn:hover { border-color: var(--earth-light); color: var(--earth); }
+.frame-btn.active { border-color: var(--earth); background: var(--cream); color: var(--earth); font-weight: 500; }
+.frame-swatch {
+  width: 28px; height: 10px;
+  border-radius: 3px;
+  display: block;
+}
+
+/* ── Mat controls ── */
+.mat-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.mat-row input[type=range] {
+  flex: 1;
+  accent-color: var(--earth);
+  height: 3px;
+}
+.range-val {
+  font-size: 11px;
+  color: var(--earth);
+  min-width: 22px;
+  text-align: right;
+}
+.mat-color-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+.color-dot {
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.15s, transform 0.15s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+}
+.color-dot:hover { transform: scale(1.15); }
+.color-dot.active { border-color: var(--earth) !important; }
+
+/* ── Background chips ── */
+.bg-options {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.bg-chip {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.15s, transform 0.15s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+}
+.bg-chip:hover { transform: scale(1.12); }
+.bg-chip.active { border-color: var(--earth) !important; }
+
+/* ── Text label inputs ── */
+.label-input {
+  width: 100%;
+  padding: 0.5rem 0.7rem;
+  border: 1px solid var(--cream-dark);
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.18s;
+  margin-top: 4px;
+}
+.label-input:focus { border-color: var(--earth-light); }
+.label-input::placeholder { color: var(--text-muted); font-style: italic; }
+.input-row { margin-bottom: 0.7rem; }
+.input-row:last-child { margin-bottom: 0; }
+.input-row label {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: block;
+  margin-bottom: 2px;
+  letter-spacing: 0.03em;
+}
+
+/* ── Toggle rows ── */
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.35rem 0;
+  gap: 0.5rem;
+}
+.toggle-row + .toggle-row { border-top: 1px solid var(--cream-dark); margin-top: 4px; padding-top: 10px; }
+.toggle-label {
+  font-size: 13px;
+  color: var(--text);
+  flex: 1;
+}
+.toggle-label span {
+  display: block;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+.toggle {
+  position: relative;
+  width: 40px; height: 22px;
+  flex-shrink: 0;
+}
+.toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+.toggle-track {
+  position: absolute; inset: 0;
+  background: var(--cream-dark);
+  border-radius: 11px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.toggle input:checked + .toggle-track { background: var(--earth); }
+.toggle-track::after {
+  content: '';
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 16px; height: 16px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.toggle input:checked + .toggle-track::after { transform: translateX(18px); }
+
+/* ── Action card ── */
+.action-card {
+  background: var(--earth);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.btn-upload-new {
+  width: 100%;
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid rgba(255,255,255,0.2);
+  background: transparent;
+  color: rgba(255,255,255,0.75);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.18s, color 0.18s;
+}
+.btn-upload-new:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.btn-download {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  border-radius: var(--radius-sm);
+  border: none;
+  background: rgba(255,255,255,0.14);
+  color: #fff;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13.5px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: background 0.18s;
+  letter-spacing: 0.03em;
+}
+.btn-download:hover:not(:disabled) { background: rgba(255,255,255,0.22); }
+.btn-download:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-download svg { width: 15px; height: 15px; stroke: currentColor; }
+.status-msg {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  text-align: center;
+  letter-spacing: 0.04em;
+}
+</style>
+</head>
+<body>
+<div class="app-wrap">
+  <header class="app-header">
+    <h1>Art Mockup Studio</h1>
+    <div class="divider"></div>
+    <p>Frame your artwork &mdash; instantly &mdash; for gallery-ready social sharing</p>
+  </header>
+
+  <div class="main-grid">
+    <!-- Canvas -->
+    <div class="canvas-card">
+      <div class="canvas-wrap" id="canvasWrap">
+        <div class="upload-zone" id="uploadZone">
+          <div class="upload-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="17 8 12 3 7 8"/>
+              <line x1="12" y1="3" x2="12" y2="15"/>
+            </svg>
+          </div>
+          <p><strong>Drop your artwork here</strong><br>or click to browse</p>
+          <p style="font-size:12px">JPG &middot; PNG &middot; WEBP &middot; GIF</p>
+        </div>
+        <canvas id="previewCanvas" class="hidden"></canvas>
+      </div>
+      <div class="heic-warning" id="heicWarning">
+        <strong>&#9888; HEIC/HEIF not supported</strong> — switch camera to JPEG:<br>
+        <b>iPhone:</b> Settings → Camera → Formats → <em>Most Compatible</em><br>
+        <b>Samsung:</b> Camera → Settings → Picture format → <em>JPG</em>
+      </div>
+      <p class="tip-text" id="tipText">Upload an image to generate your framed mockup</p>
+      <input type="file" id="fileInput" accept="image/*">
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+
+      <!-- Output format -->
+      <div class="control-card">
+        <span class="control-label">Output Format</span>
+        <div class="ratio-btns" id="ratioControls">
+          <button class="ratio-btn active" data-id="square">Instagram<span>1 : 1</span></button>
+          <button class="ratio-btn" data-id="portrait">Instagram<span>4 : 5</span></button>
+          <button class="ratio-btn" data-id="pinterest">Pinterest<span>2 : 3</span></button>
+          <button class="ratio-btn" data-id="landscape">Landscape<span>4 : 3</span></button>
+        </div>
+      </div>
+
+      <!-- Frame material -->
+      <div class="control-card">
+        <span class="control-label">Frame Material</span>
+        <div class="frame-btns" id="frameControls">
+          <button class="frame-btn active" data-frame="oak">
+            <span class="frame-swatch" style="background:linear-gradient(135deg,#c8a97a,#9d7a52,#c8a97a)"></span>Oak
+          </button>
+          <button class="frame-btn" data-frame="black">
+            <span class="frame-swatch" style="background:linear-gradient(135deg,#3a3a3a,#1a1a1a,#3a3a3a)"></span>Ebony
+          </button>
+          <button class="frame-btn" data-frame="white">
+            <span class="frame-swatch" style="background:linear-gradient(135deg,#f5f5f2,#e8e8e3,#f5f5f2);border:1px solid #ddd"></span>White
+          </button>
+        </div>
+      </div>
+
+      <!-- Mat -->
+      <div class="control-card">
+        <span class="control-label">Mat (Passepartout)</span>
+        <div class="mat-row">
+          <span>Width</span>
+          <input type="range" id="matWidth" min="0" max="100" value="40">
+          <span class="range-val" id="matWidthVal">40</span>
+        </div>
+        <span class="control-label" style="margin-top:0.9rem">Mat Color</span>
+        <div class="mat-color-row">
+          <div class="color-dot active" data-mat="#f9f6f0" style="background:#f9f6f0"></div>
+          <div class="color-dot" data-mat="#ffffff" style="background:#ffffff"></div>
+          <div class="color-dot" data-mat="#1a1a1a" style="background:#1a1a1a"></div>
+          <div class="color-dot" data-mat="#c8b9a5" style="background:#c8b9a5"></div>
+          <div class="color-dot" data-mat="#d6d0c8" style="background:#d6d0c8"></div>
+          <div class="color-dot" data-mat="#3d5a4c" style="background:#3d5a4c"></div>
+        </div>
+      </div>
+
+      <!-- Title / signature -->
+      <div class="control-card">
+        <span class="control-label">Gallery Card Label</span>
+        <div class="input-row">
+          <label for="artworkTitle">Artwork title</label>
+          <input class="label-input" type="text" id="artworkTitle" placeholder="e.g. Whispers of Dawn" maxlength="50">
+        </div>
+        <div class="input-row">
+          <label for="artistName">Artist name</label>
+          <input class="label-input" type="text" id="artistName" placeholder="e.g. Anna Svensson" maxlength="40">
+        </div>
+      </div>
+
+      <!-- Atmosphere & view -->
+      <div class="control-card">
+        <span class="control-label">Atmosphere &amp; View</span>
+        <div class="toggle-row">
+          <div class="toggle-label">
+            Props
+            <span>Plant &amp; soft light</span>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="propToggle" checked>
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-label">
+            Phone mockup
+            <span>Instagram post preview</span>
+          </div>
+          <label class="toggle">
+            <input type="checkbox" id="phoneModeToggle">
+            <span class="toggle-track"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Background wall -->
+      <div class="control-card">
+        <span class="control-label">Background Wall</span>
+        <div class="bg-options">
+          <div class="bg-chip active" data-bg="wall-warm" style="background:linear-gradient(135deg,#f5efe6,#ede4d9)" title="Warm"></div>
+          <div class="bg-chip" data-bg="wall-white" style="background:#f4f4f4" title="Studio White"></div>
+          <div class="bg-chip" data-bg="wall-dark" style="background:linear-gradient(135deg,#2a2520,#1a1612)" title="Dark Gallery"></div>
+          <div class="bg-chip" data-bg="wall-sage" style="background:linear-gradient(135deg,#d8dfd5,#c8d1c4)" title="Sage"></div>
+          <div class="bg-chip" data-bg="wall-slate" style="background:linear-gradient(135deg,#cdd3da,#bbc2cc)" title="Slate"></div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="action-card">
+        <button class="btn-upload-new" id="uploadNewBtn">+ Upload New Artwork</button>
+        <button class="btn-download" id="downloadBtn" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Download PNG
+        </button>
+        <p class="status-msg" id="statusMsg">Upload an image to begin</p>
+      </div>
+
+    </div><!-- /sidebar -->
+  </div><!-- /main-grid -->
+</div><!-- /app-wrap -->
+
+<script>
+(function () {
+  'use strict';
+
+  // ── DOM ──────────────────────────────────────────
+  const fileInput    = document.getElementById('fileInput');
+  const uploadZone   = document.getElementById('uploadZone');
+  const canvas       = document.getElementById('previewCanvas');
+  const ctx          = canvas.getContext('2d');
+  const downloadBtn  = document.getElementById('downloadBtn');
+  const uploadNewBtn = document.getElementById('uploadNewBtn');
+  const statusMsg    = document.getElementById('statusMsg');
+  const tipText      = document.getElementById('tipText');
+  const heicWarning  = document.getElementById('heicWarning');
+  const canvasWrap   = document.getElementById('canvasWrap');
+
+  // ── State ────────────────────────────────────────
+  let userImage   = null;
+  let frameStyle  = 'oak';
+  let bgStyle     = 'wall-warm';
+  let matColor    = '#f9f6f0';
+  let matWidthPct = 40;
+  let artTitle    = '';
+  let artistName  = '';
+  let propsOn     = true;
+  let phoneMode   = false;
+  let ratioKey    = 'square';
+
+  const RATIOS = {
+    square:    { w: 1, h: 1,  label: 'IG 1:1',      px: [1080,1080] },
+    portrait:  { w: 4, h: 5,  label: 'IG 4:5',       px: [1080,1350] },
+    pinterest: { w: 2, h: 3,  label: 'Pinterest 2:3', px: [1000,1500] },
+    landscape: { w: 4, h: 3,  label: 'Landscape 4:3', px: [1600,1200] },
+  };
+
+  const BG_COLORS = {
+    'wall-warm':  ['#f0e8dc','#e3d6c7'],
+    'wall-white': ['#f4f4f2','#ebebeb'],
+    'wall-dark':  ['#2e2924','#1c1814'],
+    'wall-sage':  ['#d4dbd0','#c2cbbf'],
+    'wall-slate': ['#c8ced6','#b6bdc8'],
+  };
+
+  const FRAME_THEMES = {
+    oak: {
+      colors: ['#d4a96a','#b8874a','#c99a5e','#a87640','#c0915a','#d4a96a'],
+      highlight: 'rgba(255,230,180,0.18)',
+      shadow: 'rgba(50,24,8,0.55)',
+    },
+    black: {
+      colors: ['#383530','#252220','#302d28','#1a1815','#2a2724','#383530'],
+      highlight: 'rgba(255,255,255,0.07)',
+      shadow: 'rgba(0,0,0,0.75)',
+    },
+    white: {
+      colors: ['#f0ece7','#e0dbd5','#ebe7e2','#d8d4cf','#e5e1dc','#f0ece7'],
+      highlight: 'rgba(255,255,255,0.45)',
+      shadow: 'rgba(100,90,80,0.35)',
+    },
+  };
+
+  // ── Image loading ────────────────────────────────
+  function isHEIC(file) {
+    const ext = (file.name||'').split('.').pop().toLowerCase();
+    return ext==='heic'||ext==='heif'||file.type==='image/heic'||file.type==='image/heif';
+  }
+
+  async function resizeToMax(bitmap, maxPx) {
+    const { width: w, height: h } = bitmap;
+    if (Math.max(w,h) <= maxPx) return bitmap;
+    const s = maxPx / Math.max(w,h);
+    const tmp = document.createElement('canvas');
+    tmp.width = Math.round(w*s); tmp.height = Math.round(h*s);
+    tmp.getContext('2d').drawImage(bitmap,0,0,tmp.width,tmp.height);
+    return createImageBitmap(tmp);
+  }
+
+  function bitmapToImg(bitmap) {
+    return new Promise((res,rej)=>{
+      const tmp = document.createElement('canvas');
+      tmp.width=bitmap.width; tmp.height=bitmap.height;
+      tmp.getContext('2d').drawImage(bitmap,0,0);
+      const img = new Image();
+      img.onload = ()=>res(img);
+      img.onerror = ()=>rej(new Error('bitmapToImg failed'));
+      img.src = tmp.toDataURL('image/jpeg',0.93);
+    });
+  }
+
+  function loadViaReader(file) {
+    return new Promise((res,rej)=>{
+      const reader = new FileReader();
+      reader.onload = e => {
+        const img = new Image();
+        img.onload = ()=>res(img);
+        img.onerror = ()=>rej(new Error('decode failed'));
+        img.src = e.target.result;
+      };
+      reader.onerror = ()=>rej(new Error('reader failed'));
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function loadImage(file) {
+    if (!file) return;
+    heicWarning.classList.remove('visible');
+    if (isHEIC(file)) {
+      heicWarning.classList.add('visible');
+      statusMsg.textContent = '⚠ HEIC not supported';
+      return;
+    }
+    statusMsg.textContent = 'Loading…';
+    try {
+      let img;
+      if (typeof createImageBitmap === 'function') {
+        try {
+          let bmp = await createImageBitmap(file,{imageOrientation:'from-image'});
+          bmp = await resizeToMax(bmp, 2000);
+          img = await bitmapToImg(bmp);
+        } catch(_) { img = await loadViaReader(file); }
+      } else {
+        img = await loadViaReader(file);
+      }
+      onImageReady(img);
+    } catch(err) {
+      statusMsg.textContent = 'Could not load image — try another file.';
+    }
+  }
+
+  function onImageReady(img) {
+    userImage = img;
+    heicWarning.classList.remove('visible');
+    uploadZone.classList.add('hidden');
+    canvas.classList.remove('hidden');
+    downloadBtn.disabled = false;
+    tipText.textContent = 'Adjust controls, then download your mockup';
+    updateStatusDimensions();
+    renderPreview();
+  }
+
+  function updateStatusDimensions() {
+    const r = RATIOS[ratioKey];
+    statusMsg.textContent = r.px[0] + ' × ' + r.px[1] + ' px — high resolution';
+  }
+
+  // ── Drawing utilities ────────────────────────────
+  function makeWoodGrad(c, x0,y0,x1,y1, theme) {
+    const g = c.createLinearGradient(x0,y0,x1,y1);
+    const cols = FRAME_THEMES[theme].colors;
+    const stops = [0, 0.15, 0.35, 0.6, 0.8, 1];
+    stops.forEach((s,i)=>g.addColorStop(s, cols[i]));
+    return g;
+  }
+
+  function drawWallBackground(c, W, H) {
+    const [c1,c2] = BG_COLORS[bgStyle];
+    const g = c.createLinearGradient(0,0,W,H);
+    g.addColorStop(0,c1); g.addColorStop(1,c2);
+    c.fillStyle = g;
+    c.fillRect(0,0,W,H);
+    // subtle grain
+    c.save();
+    c.globalAlpha = 0.025;
+    for(let y=0;y<H;y+=3){
+      c.fillStyle = Math.random()>0.5?'#fff':'#000';
+      c.fillRect(0,y,W,1);
+    }
+    c.restore();
+  }
+
+  function drawLightCone(c, W, H) {
+    // Warm spotlight from upper-left
+    const lx = W * 0.18, ly = -H * 0.05;
+    const g = c.createRadialGradient(lx, ly, 0, lx, ly, H * 0.8);
+    g.addColorStop(0,  'rgba(255,248,220,0.22)');
+    g.addColorStop(0.4,'rgba(255,240,200,0.09)');
+    g.addColorStop(1,  'rgba(0,0,0,0)');
+    c.save();
+    c.fillStyle = g;
+    c.fillRect(0,0,W,H);
+    c.restore();
+  }
+
+  function drawPlant(c, W, H) {
+    const bx = W - W*0.13, by = H - H*0.03;
+    const sw = W*0.09;
+
+    // Pot
+    c.save();
+    const potH = H * 0.09;
+    const potW = sw;
+    const potY = by - potH;
+    c.fillStyle = '#8c6b52';
+    c.beginPath();
+    c.moveTo(bx - potW*0.42, potY);
+    c.lineTo(bx + potW*0.42, potY);
+    c.lineTo(bx + potW*0.35, by);
+    c.lineTo(bx - potW*0.35, by);
+    c.closePath();
+    c.fill();
+    // pot rim
+    c.fillStyle = '#a07860';
+    c.fillRect(bx-potW*0.46, potY, potW*0.92, potH*0.14);
+
+    // Stems & leaves
+    const stemY = potY;
+    const leafColor1 = '#4a6a3a';
+    const leafColor2 = '#3b5830';
+    const leafColor3 = '#5e7d4a';
+
+    function drawLeaf(lx,ly,angle,scl,col){
+      c.save();
+      c.translate(lx,ly);
+      c.rotate(angle);
+      c.scale(scl,scl);
+      c.fillStyle = col;
+      c.beginPath();
+      c.moveTo(0,0);
+      c.bezierCurveTo(sw*0.18,-sw*0.22, sw*0.45,-sw*0.18, sw*0.5,-sw*0.02);
+      c.bezierCurveTo(sw*0.45, sw*0.08, sw*0.18, sw*0.1, 0,0);
+      c.fill();
+      // midrib
+      c.strokeStyle = col==='#4a6a3a'?'#3b5830':'#4a6a3a';
+      c.lineWidth = sw*0.018;
+      c.beginPath();
+      c.moveTo(0,0);
+      c.lineTo(sw*0.48,-sw*0.02);
+      c.stroke();
+      c.restore();
+    }
+
+    drawLeaf(bx, stemY, -Math.PI*0.55, 1.1, leafColor1);
+    drawLeaf(bx, stemY, -Math.PI*0.38, 0.9, leafColor2);
+    drawLeaf(bx, stemY, -Math.PI*0.72, 0.75, leafColor3);
+    drawLeaf(bx, stemY, -Math.PI*0.22, 0.85, leafColor1);
+    drawLeaf(bx, stemY, -Math.PI*0.85, 0.65, leafColor2);
+
+    c.restore();
+  }
+
+  function drawFrameShadow(c, fx,fy,fw,fh) {
+    const blur = fw * 0.09;
+    c.save();
+    c.shadowColor   = 'rgba(10,6,3,0.32)';
+    c.shadowBlur    = blur;
+    c.shadowOffsetX = fw * 0.008;
+    c.shadowOffsetY = fw * 0.022;
+    c.fillStyle = 'rgba(0,0,0,0.001)';
+    c.beginPath();
+    c.rect(fx,fy,fw,fh);
+    c.fill();
+    c.restore();
+  }
+
+  function drawFrameBody(c, fx,fy,fw,fh, t) {
+    const theme = frameStyle;
+    // Four trapezoid segments
+    const segs = [
+      // top
+      { pts:[[fx,fy],[fx+fw,fy],[fx+fw-t,fy+t],[fx+t,fy+t]], axis:'h', p1:[fx,fy], p2:[fx,fy+t] },
+      // bottom
+      { pts:[[fx,fy+fh],[fx+fw,fy+fh],[fx+fw-t,fy+fh-t],[fx+t,fy+fh-t]], axis:'h', p1:[fx,fy+fh-t], p2:[fx,fy+fh] },
+      // left
+      { pts:[[fx,fy],[fx+t,fy+t],[fx+t,fy+fh-t],[fx,fy+fh]], axis:'v', p1:[fx,fy], p2:[fx+t,fy] },
+      // right
+      { pts:[[fx+fw,fy],[fx+fw-t,fy+t],[fx+fw-t,fy+fh-t],[fx+fw,fy+fh]], axis:'v', p1:[fx+fw-t,fy], p2:[fx+fw,fy] },
+    ];
+
+    for(const seg of segs){
+      let grad;
+      if(seg.axis==='h'){
+        grad = makeWoodGrad(c, seg.p1[0],seg.p1[1], seg.p1[0]+t*2, seg.p1[1]+t*2, theme);
+      } else {
+        grad = makeWoodGrad(c, seg.p1[0],seg.p1[1], seg.p1[0]+t*2, seg.p1[1]+t*2, theme);
+      }
+      c.fillStyle = grad;
+      c.beginPath();
+      c.moveTo(...seg.pts[0]);
+      c.lineTo(...seg.pts[1]);
+      c.lineTo(...seg.pts[2]);
+      c.lineTo(...seg.pts[3]);
+      c.closePath();
+      c.fill();
+
+      // highlight shimmer
+      const hl = c.createLinearGradient(...seg.p1, seg.p1[0]+t, seg.p1[1]+t);
+      hl.addColorStop(0, FRAME_THEMES[theme].highlight);
+      hl.addColorStop(1,'rgba(255,255,255,0)');
+      c.fillStyle = hl;
+      c.beginPath();
+      c.moveTo(...seg.pts[0]);
+      c.lineTo(...seg.pts[1]);
+      c.lineTo(...seg.pts[2]);
+      c.lineTo(...seg.pts[3]);
+      c.closePath();
+      c.fill();
+    }
+
+    // Outer stroke
+    c.strokeStyle = 'rgba(0,0,0,0.22)';
+    c.lineWidth = 0.75;
+    c.strokeRect(fx+0.5,fy+0.5,fw-1,fh-1);
+    // inner rabbet line
+    c.strokeStyle = 'rgba(0,0,0,0.18)';
+    c.lineWidth = 0.5;
+    c.strokeRect(fx+t,fy+t,fw-t*2,fh-t*2);
+  }
+
+  function drawMat(c, mx,my,mw,mh, mt) {
+    if(mt<=0) return;
+    const ax=mx+mt, ay=my+mt, aw=mw-mt*2, ah=mh-mt*2;
+    c.fillStyle = matColor;
+    c.fillRect(mx,my,mw,mh);
+    // shadow under art opening
+    c.save();
+    c.shadowColor   = 'rgba(0,0,0,0.30)';
+    c.shadowBlur    = Math.max(6,mt*0.18);
+    c.shadowOffsetY = mt*0.06;
+    c.fillStyle = 'rgba(0,0,0,0.001)';
+    c.beginPath(); c.rect(ax,ay,aw,ah); c.fill();
+    c.restore();
+    // top inset gradient
+    const ig = c.createLinearGradient(ax,ay,ax,ay+Math.min(mt*0.18,14));
+    ig.addColorStop(0,'rgba(0,0,0,0.10)');
+    ig.addColorStop(1,'rgba(0,0,0,0)');
+    c.fillStyle=ig;
+    c.fillRect(ax,ay,aw,Math.min(mt*0.18,14));
+    // border line
+    c.strokeStyle='rgba(0,0,0,0.12)';
+    c.lineWidth=0.75;
+    c.strokeRect(ax,ay,aw,ah);
+  }
+
+  function drawArtwork(c, img, ax,ay,aw,ah){
+    c.save();
+    c.shadowColor='rgba(0,0,0,0.20)';
+    c.shadowBlur=10;
+    c.shadowOffsetY=3;
+    c.drawImage(img,ax,ay,aw,ah);
+    c.restore();
+    // vignette
+    const v=c.createRadialGradient(ax+aw/2,ay+ah/2,Math.min(aw,ah)*0.3,ax+aw/2,ay+ah/2,Math.max(aw,ah)*0.72);
+    v.addColorStop(0,'rgba(0,0,0,0)');
+    v.addColorStop(1,'rgba(0,0,0,0.07)');
+    c.fillStyle=v; c.fillRect(ax,ay,aw,ah);
+  }
+
+  function drawGalleryLabel(c, W, H, frameBottom) {
+    if(!artTitle && !artistName) return;
+    const cy = frameBottom + (H - frameBottom) * 0.45;
+    c.textAlign = 'center';
+    if(artTitle){
+      c.font = `300 italic ${Math.round(H*0.028)}px 'Cormorant Garamond', Georgia, serif`;
+      c.fillStyle = '#5d4a3e';
+      c.globalAlpha = 0.88;
+      c.fillText(artTitle, W/2, cy);
+      c.globalAlpha = 1;
+    }
+    if(artistName){
+      const baseY = artTitle ? cy + H*0.034 : cy;
+      c.font = `300 ${Math.round(H*0.019)}px 'DM Sans', sans-serif`;
+      c.fillStyle = '#9b887e';
+      c.letterSpacing = '0.06em';
+      c.globalAlpha = 0.80;
+      c.fillText(artistName, W/2, baseY);
+      c.globalAlpha = 1;
+      c.letterSpacing = '0';
+    }
+  }
+
+  // ── Gallery wall full scene ──────────────────────
+  function drawWallScene(c, W, H, img) {
+    drawWallBackground(c, W, H);
+    if(propsOn) drawLightCone(c, W, H);
+
+    // Determine frame placement
+    const ratio = RATIOS[ratioKey];
+    const maxFW = W * 0.78, maxFH = H * 0.72;
+    const imgRatio = img.width / img.height;
+
+    // artwork dimensions constrained to max box
+    let aw, ah;
+    if(imgRatio > maxFW/maxFH){
+      aw = maxFW * 0.72; ah = aw / imgRatio;
+    } else {
+      ah = maxFH * 0.68; aw = ah * imgRatio;
+    }
+
+    const mt = matWidthPct * 0.55; // mat thickness in pixels relative to canvas
+    const frameT = Math.max(14, aw * 0.038);
+    const totalW = aw + mt*2 + frameT*2;
+    const totalH = ah + mt*2 + frameT*2;
+
+    // Centre frame slightly above-centre to leave room for label
+    const labelH = (artTitle||artistName) ? H*0.08 : 0;
+    const fx = (W - totalW)/2;
+    const fy = (H - totalH - labelH) / 2;
+
+    drawFrameShadow(c, fx,fy,totalW,totalH);
+    drawFrameBody(c, fx,fy,totalW,totalH, frameT);
+    drawMat(c, fx+frameT, fy+frameT, aw+mt*2, ah+mt*2, mt);
+    drawArtwork(c, img, fx+frameT+mt, fy+frameT+mt, aw, ah);
+
+    if(propsOn) drawPlant(c, W, H);
+
+    // Gallery label below frame
+    drawGalleryLabel(c, W, H, fy + totalH);
+  }
+
+  // ── Phone mockup scene ───────────────────────────
+  function drawPhoneScene(c, W, H, img) {
+    // Phone body dimensions
+    const phoneW = Math.min(W * 0.52, 320);
+    const phoneH = phoneW * 2.16; // ~iPhone aspect
+    const px = (W - phoneW)/2;
+    const py = (H - phoneH)/2;
+    const corner = phoneW * 0.11;
+
+    // Dark backdrop
+    c.fillStyle = '#1a1612';
+    c.fillRect(0,0,W,H);
+    // soft vignette over backdrop
+    const bv = c.createRadialGradient(W/2,H/2,phoneH*0.2,W/2,H/2,H*0.85);
+    bv.addColorStop(0,'rgba(50,35,25,0)');
+    bv.addColorStop(1,'rgba(5,3,2,0.55)');
+    c.fillStyle=bv; c.fillRect(0,0,W,H);
+
+    // Phone body
+    c.save();
+    c.beginPath();
+    roundRect(c, px,py,phoneW,phoneH,corner);
+    c.fillStyle = '#252220';
+    c.fill();
+    c.strokeStyle = '#3a3632';
+    c.lineWidth = 1.5;
+    c.stroke();
+    c.restore();
+
+    // Side buttons
+    c.fillStyle = '#2e2b28';
+    c.fillRect(px-2.5, py+phoneH*0.22, 3, phoneH*0.07); // vol up
+    c.fillRect(px-2.5, py+phoneH*0.31, 3, phoneH*0.07); // vol dn
+    c.fillRect(px+phoneW-0.5, py+phoneH*0.27, 3, phoneH*0.1); // power
+
+    // Screen area (inset)
+    const scrnPad = phoneW * 0.03;
+    const scrnX = px + scrnPad;
+    const scrnY = py + scrnPad;
+    const scrnW = phoneW - scrnPad*2;
+    const scrnH = phoneH - scrnPad*2;
+    const scrnR = corner * 0.85;
+
+    c.save();
+    c.beginPath();
+    roundRect(c, scrnX, scrnY, scrnW, scrnH, scrnR);
+    c.clip();
+
+    // IG-style white feed background
+    c.fillStyle = '#fafafa';
+    c.fillRect(scrnX,scrnY,scrnW,scrnH);
+
+    // Status bar
+    const sbH = phoneH * 0.038;
+    c.fillStyle = '#fff';
+    c.fillRect(scrnX, scrnY, scrnW, sbH);
+    c.fillStyle = '#1a1a1a';
+    c.font = `${Math.round(sbH*0.6)}px 'DM Sans',sans-serif`;
+    c.textAlign = 'left';
+    c.fillText('9:41', scrnX + scrnW*0.05, scrnY + sbH*0.72);
+    c.textAlign = 'right';
+    c.fillText('●●●', scrnX + scrnW*0.95, scrnY + sbH*0.72);
+
+    // IG top bar
+    const igH = phoneH * 0.05;
+    const igY = scrnY + sbH;
+    c.fillStyle = '#fff';
+    c.fillRect(scrnX, igY, scrnW, igH);
+    c.strokeStyle = '#e0e0e0';
+    c.lineWidth = 0.75;
+    c.beginPath(); c.moveTo(scrnX, igY+igH); c.lineTo(scrnX+scrnW, igY+igH); c.stroke();
+    // IG wordmark approximation
+    c.fillStyle = '#1a1a1a';
+    c.font = `italic ${Math.round(igH*0.6)}px 'Cormorant Garamond',Georgia,serif`;
+    c.textAlign = 'center';
+    c.fillText('Instagram', scrnX+scrnW/2, igY+igH*0.72);
+
+    // Post header (avatar + username)
+    const postY = igY + igH;
+    const headerH = phoneH * 0.06;
+    c.fillStyle = '#fff';
+    c.fillRect(scrnX, postY, scrnW, headerH);
+    // avatar circle
+    const avR = headerH*0.35;
+    const avX = scrnX + scrnW*0.06 + avR;
+    const avY = postY + headerH/2;
+    c.fillStyle = '#c8b9a5';
+    c.beginPath(); c.arc(avX, avY, avR, 0, Math.PI*2); c.fill();
+    c.fillStyle = '#3a3a3a';
+    c.font = `500 ${Math.round(headerH*0.3)}px 'DM Sans',sans-serif`;
+    c.textAlign = 'left';
+    const uname = artistName || 'artist_studio';
+    c.fillText(uname.toLowerCase().replace(/\s+/g,'_').substring(0,18), avX+avR+scrnW*0.02, avY+headerH*0.1);
+
+    // Post image area — framed artwork
+    const postImgY = postY + headerH;
+    const postImgH = scrnW; // square crop for IG
+    c.fillStyle = '#f0e8dc';
+    c.fillRect(scrnX, postImgY, scrnW, postImgH);
+
+    // Draw framed artwork inside the post image
+    const imgRatio = img.width / img.height;
+    const maxAW = scrnW * 0.64, maxAH = postImgH * 0.64;
+    let aw,ah;
+    if(imgRatio > maxAW/maxAH){ aw=maxAW; ah=aw/imgRatio; }
+    else { ah=maxAH; aw=ah*imgRatio; }
+    const mt2  = Math.max(5, aw*0.055);
+    const fT2  = Math.max(6, aw*0.032);
+    const totW = aw + mt2*2 + fT2*2;
+    const totH = ah + mt2*2 + fT2*2;
+    const ffx  = scrnX + (scrnW - totW)/2;
+    const ffy  = postImgY + (postImgH - totH)/2;
+
+    drawFrameShadow(c, ffx, ffy, totW, totH);
+    drawFrameBody(c, ffx, ffy, totW, totH, fT2);
+    drawMat(c, ffx+fT2, ffy+fT2, aw+mt2*2, ah+mt2*2, mt2);
+    drawArtwork(c, img, ffx+fT2+mt2, ffy+fT2+mt2, aw, ah);
+
+    // Like/comment bar
+    const actY = postImgY + postImgH;
+    const actH = phoneH * 0.048;
+    c.fillStyle = '#fff';
+    c.fillRect(scrnX, actY, scrnW, actH);
+    c.fillStyle = '#262626';
+    c.font = `${Math.round(actH*0.5)}px 'DM Sans',sans-serif`;
+    c.textAlign = 'left';
+    c.fillText('♡  ✈  💬', scrnX+scrnW*0.04, actY+actH*0.7);
+
+    // Caption
+    const capY = actY + actH;
+    const capH = phoneH * 0.055;
+    c.fillStyle = '#fff';
+    c.fillRect(scrnX, capY, scrnW, capH);
+    c.fillStyle = '#262626';
+    c.font = `500 ${Math.round(capH*0.28)}px 'DM Sans',sans-serif`;
+    c.textAlign = 'left';
+    const capName = (artistName||'artist_studio').toLowerCase().replace(/\s+/g,'_');
+    c.fillText(capName, scrnX+scrnW*0.04, capY+capH*0.38);
+    c.font = `300 ${Math.round(capH*0.26)}px 'DM Sans',sans-serif`;
+    c.fillStyle = '#555';
+    const capText = artTitle ? `"${artTitle}"` : 'New artwork — available now ✨';
+    c.fillText(capText.substring(0,32), scrnX+scrnW*0.04+c.measureText(capName+'  ').width, capY+capH*0.38);
+
+    c.restore(); // unclip screen
+
+    // Notch / dynamic island
+    const notchW = phoneW * 0.28;
+    const notchH = phoneH * 0.018;
+    c.fillStyle = '#252220';
+    c.beginPath();
+    roundRect(c, px+(phoneW-notchW)/2, py+scrnPad*0.5, notchW, notchH, notchH/2);
+    c.fill();
+
+    // Glass sheen
+    c.save();
+    const sheen = c.createLinearGradient(px, py, px+phoneW, py+phoneH*0.4);
+    sheen.addColorStop(0,'rgba(255,255,255,0.06)');
+    sheen.addColorStop(1,'rgba(255,255,255,0)');
+    c.beginPath();
+    roundRect(c, px,py,phoneW,phoneH,corner);
+    c.fillStyle=sheen; c.fill();
+    c.restore();
+  }
+
+  // polyfill for roundRect path (no fill/stroke, just path)
+  function roundRect(c, x,y,w,h,r){
+    c.moveTo(x+r,y);
+    c.lineTo(x+w-r,y);
+    c.quadraticCurveTo(x+w,y,x+w,y+r);
+    c.lineTo(x+w,y+h-r);
+    c.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+    c.lineTo(x+r,y+h);
+    c.quadraticCurveTo(x,y+h,x,y+h-r);
+    c.lineTo(x,y+r);
+    c.quadraticCurveTo(x,y,x+r,y);
+    c.closePath();
+  }
+
+  // ── Render engine ────────────────────────────────
+  function renderToCanvas(c, W, H, img) {
+    c.clearRect(0,0,W,H);
+    if(phoneMode){
+      drawPhoneScene(c, W, H, img);
+    } else {
+      drawWallScene(c, W, H, img);
+    }
+  }
+
+  function renderPreview() {
+    if(!userImage) return;
+    const ratio = RATIOS[ratioKey];
+    const maxW  = canvasWrap.clientWidth || 480;
+    // preserve aspect ratio
+    const aspect = ratio.w / ratio.h;
+    const W = Math.round(maxW);
+    const H = Math.round(maxW / aspect);
+    canvas.width  = W;
+    canvas.height = H;
+    canvas.style.width  = W + 'px';
+    canvas.style.height = H + 'px';
+    renderToCanvas(ctx, W, H, userImage);
+  }
+
+  function renderExport(cb) {
+    const ratio = RATIOS[ratioKey];
+    const W = ratio.px[0], H = ratio.px[1];
+    const off = document.createElement('canvas');
+    off.width=W; off.height=H;
+    const offCtx = off.getContext('2d');
+    renderToCanvas(offCtx, W, H, userImage);
+    cb(off);
+  }
+
+  // ── Event wiring ─────────────────────────────────
+
+  // File upload
+  uploadZone.addEventListener('click', ()=>fileInput.click());
+  uploadNewBtn.addEventListener('click', ()=>fileInput.click());
+  fileInput.addEventListener('change', function(){
+    if(this.files&&this.files[0]){ loadImage(this.files[0]); this.value=''; }
+  });
+  uploadZone.addEventListener('dragover', e=>{e.preventDefault();uploadZone.classList.add('drag-over');});
+  uploadZone.addEventListener('dragleave', ()=>uploadZone.classList.remove('drag-over'));
+  uploadZone.addEventListener('drop', e=>{
+    e.preventDefault(); uploadZone.classList.remove('drag-over');
+    if(e.dataTransfer.files[0]) loadImage(e.dataTransfer.files[0]);
+  });
+
+  // Ratio
+  document.getElementById('ratioControls').addEventListener('click', e=>{
+    const btn = e.target.closest('.ratio-btn');
+    if(!btn) return;
+    document.querySelectorAll('.ratio-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    ratioKey = btn.dataset.id;
+    updateStatusDimensions();
+    if(userImage) renderPreview();
+  });
+
+  // Frame
+  document.getElementById('frameControls').addEventListener('click', e=>{
+    const btn = e.target.closest('.frame-btn');
+    if(!btn) return;
+    document.querySelectorAll('.frame-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    frameStyle = btn.dataset.frame;
+    if(userImage) renderPreview();
+  });
+
+  // Mat width
+  const matSlider = document.getElementById('matWidth');
+  const matVal    = document.getElementById('matWidthVal');
+  matSlider.addEventListener('input', function(){
+    matWidthPct = parseInt(this.value);
+    matVal.textContent = this.value;
+    if(userImage) renderPreview();
+  });
+
+  // Mat color
+  document.querySelectorAll('.color-dot').forEach(dot=>{
+    dot.addEventListener('click', function(){
+      document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('active'));
+      this.classList.add('active');
+      matColor = this.dataset.mat;
+      if(userImage) renderPreview();
+    });
+  });
+
+  // Background
+  document.querySelectorAll('.bg-chip').forEach(chip=>{
+    chip.addEventListener('click', function(){
+      document.querySelectorAll('.bg-chip').forEach(c=>c.classList.remove('active'));
+      this.classList.add('active');
+      bgStyle = this.dataset.bg;
+      if(userImage) renderPreview();
+    });
+  });
+
+  // Title / Artist
+  document.getElementById('artworkTitle').addEventListener('input', function(){
+    artTitle = this.value.trim();
+    if(userImage) renderPreview();
+  });
+  document.getElementById('artistName').addEventListener('input', function(){
+    artistName = this.value.trim();
+    if(userImage) renderPreview();
+  });
+
+  // Toggles
+  document.getElementById('propToggle').addEventListener('change', function(){
+    propsOn = this.checked;
+    if(userImage) renderPreview();
+  });
+  document.getElementById('phoneModeToggle').addEventListener('change', function(){
+    phoneMode = this.checked;
+    if(userImage) renderPreview();
+  });
+
+  // Download
+  downloadBtn.addEventListener('click', function(){
+    if(!userImage) return;
+    this.disabled = true;
+    statusMsg.textContent = 'Rendering…';
+    setTimeout(()=>{
+      renderExport(off=>{
+        const a = document.createElement('a');
+        a.download = 'mockup-' + ratioKey + '-' + Date.now() + '.png';
+        a.href = off.toDataURL('image/png');
+        a.click();
+        downloadBtn.disabled = false;
+        statusMsg.textContent = 'Downloaded ✓';
+        setTimeout(updateStatusDimensions, 2500);
+      });
+    }, 60);
+  });
+
+  // Resize
+  window.addEventListener('resize', ()=>{
+    clearTimeout(window._rt);
+    window._rt = setTimeout(()=>{ if(userImage) renderPreview(); }, 180);
+  });
+
+})();
+</script>
+</body>
+</html>
