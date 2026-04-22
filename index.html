@@ -915,7 +915,7 @@ html, body {
           a.href = off.toDataURL('image/png');
         } else {
           a.download = 'mockup-'+ratioKey+'-'+Date.now()+'.jpg';
-          a.href = off.toDataURL('image/jpeg', 0.93);
+          a.href = off.toDataURL('image/jpeg', 0.70);
         }
         a.click();
         dlPng.disabled = false; dlJpg.disabled = false;
